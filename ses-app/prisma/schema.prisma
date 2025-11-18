@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+enum Role {
+  SYSTEM_MANAGER
+}
+
+enum EvidenceStatus {
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum EvidenceType {
+  FILE 
+  LINK
+}
+
+model Axis {
+  id            String    @id @default(cuid())
+  nameEn        String
+  nameAr        String
+  descriptionEn String?
+  descriptionAr String?
+  domains       Domain[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Domain {
+  id            String      @id @default(cuid())
+  code          String?      @unique
+  nameEn        String
+  nameAr        String
+  descriptionEn String?
+  descriptionAr String?
+  axis          Axis        @relation(fields: [axisId], references: [id], onDelete: Cascade)
+  axisId        String
+  standards     Standard[]
+  evidences     Evidence[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Standard {
+  id            String      @id @default(cuid())
+  code          String
+  nameEn        String
+  nameAr        String
+  descriptionEn String?
+  descriptionAr String?
+  domain        Domain      @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domainId      String
+  indicators    Indicator[]
+  evidences     Evidence[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([domainId, code])
+}
+
+model Indicator {
+  id            String     @id @default(cuid())
+  code          String
+  descriptionEn String?
+  descriptionAr String?
+  standard      Standard   @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  standardId    String
+  evidences     Evidence[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([standardId, code])
+}
+
+model Evidence {
+  id            String          @id @default(cuid())
+  title         String
+  description   String?
+  domain        Domain          @relation(fields: [domainId], references: [id])
+  domainId      String
+  standard      Standard        @relation(fields: [standardId], references: [id])
+  standardId    String
+  indicator     Indicator       @relation(fields: [indicatorId], references: [id])
+  indicatorId   String
+  type          EvidenceType
+  filePath      String?
+  url           String?
+  status        EvidenceStatus  @default(UNDER_REVIEW)
+  notes         String?
+  submittedBy   User            @relation("submittedEvidence", fields: [submittedById], references: [id])
+  submittedById String
+  submittedAt   DateTime        @default(now())
+  reviewedBy    User?           @relation("reviewedEvidence", fields: [reviewedById], references: [id])
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([status])
+  @@index([domainId, standardId, indicatorId])
+}
+
+model User {
+  id                String             @id @default(cuid())
+  name              String
+  email             String             @unique
+  role              Role
+  passwordHash      String
+  submissions       Evidence[]         @relation("submittedEvidence")
+  reviews           Evidence[]         @relation("reviewedEvidence")
+  activityLogs      ActivityLog[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model ActivityLog {
+  id          String    @id @default(cuid())
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
+  action      String
+  ip          String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+}

@@ -1,0 +1,24 @@
+{
+    "app": {
+      "title": "School Performance Evaluation System for Modern Era School",
+      "tagline": "Streamline evidence management and performance tracking"
+    },
+    "navigation": {
+      "dashboard": "Dashboard",
+      "evidence": "Evidence",
+      "upload": "Upload",
+      "reports": "Reports",
+      "users": "Users"
+    },
+    "actions": {
+      "switchLanguage": "العربية",
+      "toggleDarkMode": "Toggle Dark Mode",
+      "login": "Login",
+      "logout": "Logout",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "home": {
+      "nextSteps": "Start by uploading evidence or viewing the dashboard."
+    }
+  }
