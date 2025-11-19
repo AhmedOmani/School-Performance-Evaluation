@@ -1,13 +1,20 @@
 import { notFound, redirect } from "next/navigation";
-import { LanguageSwitch } from "@/components/language-switch";
-import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  FileText,
+  BarChart3,
+  PieChart
+} from "lucide-react";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { getServerTranslation } from "@/lib/i18n/server";
 import { resolveLocale } from "@/lib/i18n/utils";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/session";
-import { LogoutButton } from "@/components/logout-button";
 import { AuthenticatedLayout } from "@/components/layouts/authenticated-layout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type DashboardPageProps = {
   params: Promise<{ locale?: string }>;
@@ -50,7 +57,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   });
 
   // Get domain names for the chart
-  const domainIds = evidenceByDomain.map((e) => e.domainId);
+  const domainIds = evidenceByDomain.map((e: { domainId: string }) => e.domainId);
   const domains = await prisma.domain.findMany({
     where: { id: { in: domainIds } },
     select: {
@@ -58,14 +65,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
       nameEn: true,
       nameAr: true,
     },
-  });
-
-  const domainStats = evidenceByDomain.map((stat) => {
-    const domain = domains.find((d) => d.id === stat.domainId);
-    return {
-      name: locale === "ar" ? domain?.nameAr : domain?.nameEn,
-      count: stat._count.id,
-    };
   });
 
   const recentEvidence = await prisma.evidence.findMany({
@@ -79,15 +78,52 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     },
   });
 
+  const domainStats = evidenceByDomain.map((stat: { domainId: string; _count: { id: number } }) => {
+    const domain = domains.find((d: { id: string; nameEn: string; nameAr: string }) => d.id === stat.domainId);
+    return {
+      name: locale === "ar" ? domain?.nameAr : domain?.nameEn,
+      count: stat._count.id,
+    };
+  });
+
+
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "APPROVED": return "success";
+      case "REJECTED": return "destructive";
+      case "UNDER_REVIEW": return "warning";
+      default: return "secondary";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    if (locale === "ar") {
+      switch (status) {
+        case "APPROVED": return "معتمد";
+        case "REJECTED": return "مرفوض";
+        case "UNDER_REVIEW": return "قيد المراجعة";
+        default: return status;
+      }
+    } else {
+      switch (status) {
+        case "APPROVED": return "Approved";
+        case "REJECTED": return "Rejected";
+        case "UNDER_REVIEW": return "Under Review";
+        default: return status;
+      }
+    }
+  };
+
   return (
     <AuthenticatedLayout locale={locale} userName={user.name} userRole={user.role}>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">
             {t("navigation.dashboard")}
           </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          <p className="text-muted-foreground">
             {locale === "ar"
               ? "نظرة عامة على الأدلة والإحصائيات"
               : "Overview of Evidence and Statistics"}
@@ -95,130 +131,146 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-red-200 bg-white p-6 shadow-sm dark:border-red-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "مرفوض" : "Rejected"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-red-600 dark:text-red-400">
-                  {rejectedCount}
-                </p>
-              </div>
-              <div className="rounded-full bg-red-100 p-3 dark:bg-red-900/20">
-                <span className="text-2xl">✕</span>
-              </div>
-            </div>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {locale === "ar" ? "إجمالي الأدلة" : "Total Evidence"}
+              </CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalEvidence}</div>
+              <p className="text-xs text-muted-foreground">
+                {locale === "ar" ? "تم رفعها للنظام" : "Uploaded to system"}
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="rounded-xl border border-green-200 bg-white p-6 shadow-sm dark:border-green-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "معتمد" : "Approved"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-green-600 dark:text-green-400">
-                  {approvedCount}
-                </p>
-              </div>
-              <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/20">
-                <span className="text-2xl">✓</span>
-              </div>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {locale === "ar" ? "معتمد" : "Approved"}
+              </CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
+              <p className="text-xs text-muted-foreground">
+                {totalEvidence > 0 ? Math.round((approvedCount / totalEvidence) * 100) : 0}% {locale === "ar" ? "من الإجمالي" : "of total"}
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="rounded-xl border border-yellow-200 bg-white p-6 shadow-sm dark:border-yellow-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "قيد المراجعة" : "Under Review"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                  {underReviewCount}
-                </p>
-              </div>
-              <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900/20">
-                <span className="text-2xl">⏳</span>
-              </div>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {locale === "ar" ? "قيد المراجعة" : "Under Review"}
+              </CardTitle>
+              <Clock className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">{underReviewCount}</div>
+              <p className="text-xs text-muted-foreground">
+                {locale === "ar" ? "بانتظار الإجراء" : "Pending action"}
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="rounded-xl border border-blue-200 bg-white p-6 shadow-sm dark:border-blue-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "إجمالي الأدلة" : "Total Evidence"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {totalEvidence}
-                </p>
-              </div>
-              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/20">
-                <span className="text-2xl">📄</span>
-              </div>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {locale === "ar" ? "مرفوض" : "Rejected"}
+              </CardTitle>
+              <XCircle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{rejectedCount}</div>
+              <p className="text-xs text-muted-foreground">
+                {locale === "ar" ? "بحاجة لتصحيح" : "Needs correction"}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Charts Section */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-            <h3 className="text-lg font-semibold">
-              {locale === "ar" ? "حسب المجال" : "By Domain"}
-            </h3>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              {locale === "ar"
-                ? "توزيع الأدلة حسب المجالات"
-                : "Evidence distribution by domains"}
-            </p>
-            <div className="mt-4 space-y-2">
-              {domainStats.map((stat, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <span className="text-sm">{stat.name}</span>
-                  <span className="font-semibold">{stat.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="col-span-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                {locale === "ar" ? "حسب المجال" : "By Domain"}
+              </CardTitle>
+              <CardDescription>
+                {locale === "ar"
+                  ? "توزيع الأدلة حسب المجالات"
+                  : "Evidence distribution by domains"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {domainStats.map((stat: { name: string | undefined; count: number }, idx: number) => (
+                  <div key={idx} className="flex items-center">
+                    <div className="w-full flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">{stat.name}</span>
+                        <span className="text-sm text-muted-foreground">{stat.count}</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-secondary">
+                        <div
+                          className="h-2 rounded-full bg-primary"
+                          style={{ width: `${totalEvidence > 0 ? (stat.count / totalEvidence) * 100 : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {domainStats.length === 0 && (
+                  <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+                    {locale === "ar" ? "لا توجد بيانات" : "No data available"}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-            <h3 className="text-lg font-semibold">
-              {locale === "ar" ? "حسب الحالة" : "By Status"}
-            </h3>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              {locale === "ar"
-                ? "نسبة الأدلة حسب الحالة"
-                : "Evidence proportion by status"}
-            </p>
-            {/* Donut chart will go here */}
-          </div>
-        </div>
-
-        {/* Recent Evidence */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-          <h3 className="text-lg font-semibold">
-            {locale === "ar" ? "آخر الأدلة المرفوعة" : "Latest Uploaded Evidence"}
-          </h3>
-          <div className="mt-4 space-y-2">
-            {recentEvidence.length > 0 ? (
-              recentEvidence.map((evidence) => (
-                <div
-                  key={evidence.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 p-3 dark:border-gray-700"
-                >
-                  <span className="text-sm font-medium">{evidence.title}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {evidence.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {locale === "ar" ? "لا توجد أدلة بعد" : "No evidence yet"}
-              </p>
-            )}
-          </div>
+          <Card className="col-span-3">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                {locale === "ar" ? "آخر الأدلة المرفوعة" : "Latest Uploaded Evidence"}
+              </CardTitle>
+              <CardDescription>
+                {locale === "ar" ? "آخر 5 ملفات تم رفعها" : "Last 5 files uploaded"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentEvidence.length > 0 ? (
+                  recentEvidence.map((evidence: { id: string; title: string; status: string; submittedAt: Date }) => (
+                    <div
+                      key={evidence.id}
+                      className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none">{evidence.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(evidence.submittedAt).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+                        </p>
+                      </div>
+                      <Badge variant={getStatusVariant(evidence.status)}>
+                        {getStatusText(evidence.status)}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+                    {locale === "ar" ? "لا توجد أدلة بعد" : "No evidence yet"}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </AuthenticatedLayout>

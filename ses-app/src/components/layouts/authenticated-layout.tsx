@@ -1,18 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { 
-  LayoutDashboard, 
-  Upload, 
-  FolderOpen, 
-  FileText, 
-  Users 
+import NextImage from "next/image";
+import {
+  LayoutDashboard,
+  Upload,
+  FolderOpen,
+  FileText,
+  Users,
+  Menu,
+  X,
+  CheckCircle2
 } from "lucide-react";
 import { LanguageSwitch } from "@/components/language-switch";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";
 import { useTranslation } from "@/lib/i18n/client";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 
 type AuthenticatedLayoutProps = {
@@ -22,113 +30,125 @@ type AuthenticatedLayoutProps = {
   userRole?: string;
 };
 
-export function AuthenticatedLayout({children,locale,userName, userRole}: AuthenticatedLayoutProps) {
+export function AuthenticatedLayout({ children, locale, userName, userRole }: AuthenticatedLayoutProps) {
   const { t } = useTranslation("common");
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => pathname === path;
 
+  const navItems = [
+    {
+      href: `/${locale}/dashboard`,
+      icon: LayoutDashboard,
+      label: t("navigation.dashboard"),
+    },
+    {
+      href: `/${locale}/upload`,
+      icon: Upload,
+      label: t("navigation.upload"),
+    },
+    {
+      href: `/${locale}/evidence`,
+      icon: FolderOpen,
+      label: t("navigation.evidence"),
+    },
+    ...(userRole === "SYSTEM_MANAGER" ? [{
+      href: `/${locale}/review`,
+      icon: CheckCircle2,
+      label: locale === "ar" ? "مراجعة" : "Review",
+    }] : []),
+    {
+      href: `/${locale}/reports`,
+      icon: FileText,
+      label: t("navigation.reports"),
+    },
+    {
+      href: `/${locale}/users`,
+      icon: Users,
+      label: t("navigation.users"),
+    },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-background">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed ${
-          locale === "ar" ? "right-0" : "left-0"
-        } top-0 h-full w-64 border-r border-slate-200 bg-white dark:border-gray-700 dark:bg-gray-800`}
+        className={cn(
+          "fixed inset-y-0 z-50 w-72 border-r bg-card transition-transform duration-300 ease-in-out lg:translate-x-0",
+          locale === "ar" ? "right-0 border-l border-r-0" : "left-0",
+          isMobileMenuOpen
+            ? "translate-x-0"
+            : locale === "ar" ? "translate-x-full" : "-translate-x-full"
+        )}
       >
-        <div className="flex h-full flex-col p-4">
+        <div className="flex h-full flex-col">
           {/* Sidebar Header */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              {t("navigation.dashboard")}
-            </h2>
+          <div className="flex h-16 items-center justify-between px-6 border-b">
+            <div className="flex items-center gap-3">
+              <div className="relative h-8 w-8 overflow-hidden rounded-full">
+                <NextImage
+                  src="/logo.png"
+                  alt="School Logo"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="text-lg font-bold tracking-tight text-primary">
+                {locale === "ar" ? "العهد الحديث" : "Modern Era"}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex-1 space-y-2">
-            <Link
-              href={`/${locale}/dashboard`}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                isActive(`/${locale}/dashboard`)
-                  ? "bg-primary text-white dark:bg-primary-light"
-                  : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
-              }`}
-            >
-              <LayoutDashboard className="h-5 w-5" />
-              <span>{t("navigation.dashboard")}</span>
-            </Link>
-
-            <Link
-              href={`/${locale}/upload`}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                isActive(`/${locale}/upload`)
-                  ? "bg-primary text-white dark:bg-primary-light"
-                  : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Upload className="h-5 w-5" />
-              <span>{t("navigation.upload")}</span>
-            </Link>
-
-            <Link
-              href={`/${locale}/evidence`}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                isActive(`/${locale}/evidence`)
-                  ? "bg-primary text-white dark:bg-primary-light"
-                  : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
-              }`}
-            >
-              <FolderOpen className="h-5 w-5" />
-              <span>{t("navigation.evidence")}</span>
-            </Link>
-
-            {userRole === "SYSTEM_MANAGER" && (
-                <Link
-                  href={`/${locale}/review`}
-                  className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                    isActive(`/${locale}/review`)
-                      ? "bg-primary text-white dark:bg-primary-light"
-                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  <span>✓</span>
-                  <span>{locale === "ar" ? "مراجعة" : "Review"}</span>
-                </Link>
-            )}
-
-            <Link
-              href={`/${locale}/reports`}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                isActive(`/${locale}/reports`)
-                  ? "bg-primary text-white dark:bg-primary-light"
-                  : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
-              }`}
-            >
-              <FileText className="h-5 w-5" />
-              <span>{t("navigation.reports")}</span>
-            </Link>
-
-            <Link
-              href={`/${locale}/users`}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                isActive(`/${locale}/users`)
-                  ? "bg-primary text-white dark:bg-primary-light"
-                  : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Users className="h-5 w-5" />
-              <span>{t("navigation.users")}</span>
-            </Link>
+          <nav className="flex-1 space-y-1 p-4">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                  isActive(item.href)
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
           </nav>
 
           {/* Sidebar Footer */}
-          <div className="mt-auto border-t border-slate-200 pt-4 dark:border-gray-700">
-            <div className="text-center text-xs text-slate-500 dark:text-slate-400">
-              <div className="mb-2 text-lg font-bold text-primary">AM</div>
-              <div>
-                {locale === "ar"
-                  ? "منصة الذكاء الاصطناعي | AI MNSA"
-                  : "AI Platform | AI MNSA"}
+          <div className="border-t p-4">
+            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
+                {userName ? userName.charAt(0).toUpperCase() : "U"}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {userName || "User"}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {userRole === "SYSTEM_MANAGER" ? "Admin" : "User"}
+                </p>
               </div>
             </div>
           </div>
@@ -137,35 +157,39 @@ export function AuthenticatedLayout({children,locale,userName, userRole}: Authen
 
       {/* Main Content */}
       <div
-        className={`flex-1 ${
-          locale === "ar" ? "mr-64" : "ml-64"
-        } transition-all`}
+        className={cn(
+          "flex-1 transition-all duration-300",
+          locale === "ar" ? "lg:mr-72" : "lg:ml-72"
+        )}
       >
         {/* Top Navigation Bar */}
-        <header className="sticky top-0 z-10 border-b border-slate-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <LogoutButton locale={locale} />
-              <Link
-                href={`/${locale}/dashboard`}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-dark dark:bg-primary-light"
-              >
-                {t("navigation.dashboard")}
-              </Link>
-            </div>
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-semibold md:text-xl">
+              {navItems.find(item => isActive(item.href))?.label || "Dashboard"}
+            </h1>
+          </div>
 
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-600 dark:text-slate-300">
-                {userName || "User"}
-              </span>
-              <ThemeToggle />
-              <LanguageSwitch currentLocale={locale} />
-            </div>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <ThemeToggle />
+            <LanguageSwitch currentLocale={locale} />
+            <Separator orientation="vertical" className="h-6 mx-2" />
+            <LogoutButton locale={locale} />
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="p-6">{children}</main>
+        <main className="container mx-auto max-w-7xl p-6 md:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );

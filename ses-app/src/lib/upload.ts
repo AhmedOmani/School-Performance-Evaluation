@@ -1,11 +1,11 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION || "eu-north-1",
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || "" ,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
     }
 });
@@ -37,17 +37,17 @@ export async function uploadFileToS3(file: File, folder: string): Promise<string
 }
 
 export async function getPresignedUrl(s3Key: string, expiresIn: number = 3600): Promise<string> {
-    const command = new PutObjectCommand({
+    const command = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: s3Key,
     });
-    return await getSignedUrl(s3Client, command, { expiresIn } );
+    return await getSignedUrl(s3Client, command, { expiresIn });
 }
 
 export function isS3Configured(): boolean {
     return !!(process.env.AWS_ACCESS_KEY_ID &&
         process.env.AWS_SECRET_ACCESS_KEY &&
-        process.env.AWS_REGION && 
+        process.env.AWS_REGION &&
         process.env.S3_BUCKET_NAME
     );
 }
