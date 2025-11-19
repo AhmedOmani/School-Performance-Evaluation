@@ -1,4 +1,3 @@
-// src/components/layouts/authenticated-layout.tsx
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -20,13 +19,10 @@ type AuthenticatedLayoutProps = {
   children: React.ReactNode;
   locale: Locale;
   userName?: string;
+  userRole?: string;
 };
 
-export function AuthenticatedLayout({
-  children,
-  locale,
-  userName,
-}: AuthenticatedLayoutProps) {
+export function AuthenticatedLayout({children,locale,userName, userRole}: AuthenticatedLayoutProps) {
   const { t } = useTranslation("common");
   const pathname = usePathname();
 
@@ -85,6 +81,20 @@ export function AuthenticatedLayout({
               <FolderOpen className="h-5 w-5" />
               <span>{t("navigation.evidence")}</span>
             </Link>
+
+            {userRole === "SYSTEM_MANAGER" && (
+                <Link
+                  href={`/${locale}/review`}
+                  className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive(`/${locale}/review`)
+                      ? "bg-primary text-white dark:bg-primary-light"
+                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <span>✓</span>
+                  <span>{locale === "ar" ? "مراجعة" : "Review"}</span>
+                </Link>
+            )}
 
             <Link
               href={`/${locale}/reports`}

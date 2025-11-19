@@ -40,7 +40,7 @@ export default async function EvidencePage({params,searchParams}: EvidencePagePr
     });
 
     return (
-        <AuthenticatedLayout locale={locale} userName={user.name}>
+        <AuthenticatedLayout locale={locale} userName={user.name} userRole={user.role}>
             <EvidenceList locale={locale} domains={domains} />
         </AuthenticatedLayout>
     );

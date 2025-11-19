@@ -34,7 +34,7 @@ export default async function UploadPage({ params }: UploadPageProps) {
     });
 
     return (
-        <AuthenticatedLayout locale={locale}>
+        <AuthenticatedLayout locale={locale} userName={user.name} userRole={user.role}>
             <UploadEvidenceForm locale={locale} axes={axes} />
         </AuthenticatedLayout>
     )

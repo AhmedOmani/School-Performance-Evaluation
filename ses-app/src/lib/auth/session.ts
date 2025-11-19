@@ -11,3 +11,11 @@ export async function requireAuth() {
     if (!user) throw new Error("Unauthorized");
     return user;
 }
+
+export async function requireSystemManager() {
+    const user = await requireAuth();
+    if (user.role !== "SYSTEM_MANAGER") {
+        throw new Error("Forbidden: System Manager access required");
+    }
+    return user;
+}

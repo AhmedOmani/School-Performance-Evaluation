@@ -80,7 +80,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   });
 
   return (
-    <AuthenticatedLayout locale={locale} userName={user.name}>
+    <AuthenticatedLayout locale={locale} userName={user.name} userRole={user.role}>
       <div className="space-y-6">
         {/* Header */}
         <div>
