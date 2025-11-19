@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        return NextResponse.json(domains);
+        //console.log("Domains fetched successfully:", domains);
+
+        return NextResponse.json({domains});
     } catch (error) {
         console.error("Error fetching domains: " , error);
         return NextResponse.json({error: "Failed to fetch domains"}, { status: 500});

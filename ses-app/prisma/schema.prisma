@@ -87,8 +87,8 @@ model Evidence {
   domainId      String
   standard      Standard        @relation(fields: [standardId], references: [id])
   standardId    String
-  indicator     Indicator       @relation(fields: [indicatorId], references: [id])
-  indicatorId   String
+  indicator     Indicator?      @relation(fields: [indicatorId], references: [id])
+  indicatorId   String?
   type          EvidenceType
   filePath      String?
   url           String?

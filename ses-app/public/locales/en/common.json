@@ -20,5 +20,24 @@
     },
     "home": {
       "nextSteps": "Start by uploading evidence or viewing the dashboard."
+    },
+    "upload": {
+      "title": "Upload Evidence",
+      "subtitle": "Upload school evidence and practices easily and securely",
+      "fields": {
+        "title": "Evidence Title",
+        "description": "Description",
+        "axis": "Axis",
+        "domain": "Domain",
+        "standard": "Standard",
+        "indicator": "Indicator",
+        "evidenceMethod": "Method of adding evidence",
+        "file": "File",
+        "url": "URL"
+      },
+      "actions": {
+        "uploadFile": "Upload file",
+        "enterLink": "Enter link"
+      }
     }
-  }
+}

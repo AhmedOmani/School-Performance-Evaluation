@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         const url = formData.get("url") as string | null;
 
         //validation
-        if (!title || !domainId || !standardId || ! indicatorId || !type) {
+        if (!title || !domainId || !standardId || !type) {
             return NextResponse.json({
                 error: "Missing required fields"
             }, { status: 400 });
@@ -41,24 +41,63 @@ export async function POST(request: NextRequest) {
         }
 
         // Upload file to S3 if type is FILE
-        let filePath:string | null = null;
+        let filePath: string | null = null;
         if (type === "FILE" && file) {
             if (!isS3Configured()) {
-                return NextResponse.json({ error: "S3 is not configured, check environment variables" }, { status: 500 });
+                return NextResponse.json(
+                    { error: "S3 is not configured. Please check your environment variables." },
+                    { status: 500 }
+                );
             }
 
             try {
                 filePath = await uploadFileToS3(file, "evidence");
-            } catch(error) {
-                console.error("S3 Upload error: " , error);
+            } catch (error) {
+                console.error("S3 upload error:", error);
                 return NextResponse.json(
                     { error: "Failed to upload file to S3" },
                     { status: 500 }
                 );
             }
-
         }
-    } catch(error) {
 
+        const evidence = await prisma.evidence.create({
+            data: {
+                title,
+                description: description || null,
+                domainId,
+                standardId,
+                indicatorId: indicatorId || null,
+                type,
+                filePath, // null for LINK type
+                url: type === "LINK" ? url : null, // only set url for LINK type
+                status: "UNDER_REVIEW",
+                submittedById: user.id,
+            },
+        });
+
+        // Log activity
+        await prisma.activityLog.create({
+            data: {
+                userId: user.id,
+                action: "EVIDENCE_UPLOADED",
+                metadata: {
+                    evidenceId: evidence.id,
+                    title: evidence.title,
+                    type: evidence.type,
+                },
+            },
+        });
+
+        return NextResponse.json(
+            { message: "Evidence uploaded successfully", evidence },
+            { status: 201 }
+        );
+    } catch (error) {
+        console.error("Error uploading evidence:", error);
+        return NextResponse.json(
+            { error: "Failed to upload evidence" },
+            { status: 500 }
+        );
     }
 }
