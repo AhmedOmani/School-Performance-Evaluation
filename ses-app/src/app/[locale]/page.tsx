@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DomainItem } from "@/components/domain-item";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
       description:
         locale === "ar" ? domain.descriptionAr : domain.descriptionEn,
       standardsCount: domain.standards.length,
+      standards: domain.standards.map((standard) => ({
+        id: standard.id,
+        code: standard.code,
+        name: locale === "ar" ? standard.nameAr : standard.nameEn,
+      })),
     })),
   }));
 
@@ -161,24 +167,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 <CardContent className="flex-1">
                   <div className="space-y-3">
                     {axis.domains.map((domain: any) => (
-                      <div
-                        key={domain.id}
-                        className="rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-sm">
-                            {domain.name}
-                          </span>
-                          <Badge variant="outline" className="text-[10px] h-5">
-                            {domain.code}
-                          </Badge>
-                        </div>
-                        {domain.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {domain.description}
-                          </p>
-                        )}
-                      </div>
+                      <DomainItem key={domain.id} domain={domain} />
                     ))}
                   </div>
                 </CardContent>
