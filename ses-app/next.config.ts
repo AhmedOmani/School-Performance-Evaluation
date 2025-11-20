@@ -14,7 +14,7 @@ export default withSentryConfig(nextConfig, {
   silent: true,
   org: "school-performance-evaluation-system",
   project: "javascript-nextjs",
-}, {
+
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 

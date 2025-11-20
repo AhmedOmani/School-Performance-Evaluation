@@ -39,6 +39,6 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # We don't need a real DB connection for build, but Prisma might need the env var to be present
-          DATABASE_URL: "postgresql://user:password@localhost:5432/db"
+          # Use the secret from GitHub Settings for security
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXT_PUBLIC_APP_URL: "http://localhost:3000"
