@@ -30,45 +30,52 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const { t } = await getServerTranslation(locale, "common");
 
   // Fetch axes with domains from database for landing page
-  const axes = await prisma.axis.findMany({
-    include: {
-      domains: {
-        include: {
-          standards: {
-            select: {
-              id: true,
-              code: true,
-              nameEn: true,
-              nameAr: true,
+  let localizedAxes: any[] = [];
+
+  try {
+    const axes = await prisma.axis.findMany({
+      include: {
+        domains: {
+          include: {
+            standards: {
+              select: {
+                id: true,
+                code: true,
+                nameEn: true,
+                nameAr: true,
+              },
             },
           },
         },
       },
-    },
-    orderBy: {
-      id: "asc",
-    },
-  });
+      orderBy: {
+        id: "asc",
+      },
+    });
 
-  // Localize the data
-  const localizedAxes = axes.map((axis) => ({
-    id: axis.id,
-    name: locale === "ar" ? axis.nameAr : axis.nameEn,
-    description: locale === "ar" ? axis.descriptionAr : axis.descriptionEn,
-    domains: axis.domains.map((domain) => ({
-      id: domain.id,
-      code: domain.code,
-      name: locale === "ar" ? domain.nameAr : domain.nameEn,
-      description:
-        locale === "ar" ? domain.descriptionAr : domain.descriptionEn,
-      standardsCount: domain.standards.length,
-      standards: domain.standards.map((standard) => ({
-        id: standard.id,
-        code: standard.code,
-        name: locale === "ar" ? standard.nameAr : standard.nameEn,
+    // Localize the data
+    localizedAxes = axes.map((axis) => ({
+      id: axis.id,
+      name: locale === "ar" ? axis.nameAr : axis.nameEn,
+      description: locale === "ar" ? axis.descriptionAr : axis.descriptionEn,
+      domains: axis.domains.map((domain) => ({
+        id: domain.id,
+        code: domain.code,
+        name: locale === "ar" ? domain.nameAr : domain.nameEn,
+        description:
+          locale === "ar" ? domain.descriptionAr : domain.descriptionEn,
+        standardsCount: domain.standards.length,
+        standards: domain.standards.map((standard) => ({
+          id: standard.id,
+          code: standard.code,
+          name: locale === "ar" ? standard.nameAr : standard.nameEn,
+        })),
       })),
-    })),
-  }));
+    }));
+  } catch (error) {
+    console.error("Failed to fetch axes:", error);
+    // You might want to track this error in Sentry
+  }
 
   return (
     <main className="min-h-screen bg-background">
