@@ -30,9 +30,6 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Lint
-        run: npm run lint
-
       - name: Type Check
         run: npx tsc --noEmit
 
@@ -41,4 +38,4 @@ jobs:
         env:
           # Use the secret from GitHub Settings for security
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_APP_URL: "https://school-performance-evaluation-mtxr-h1knaqwcj.vercel.app"

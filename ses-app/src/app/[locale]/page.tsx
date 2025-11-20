@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { ArrowRight, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { LanguageSwitch } from "@/components/language-switch";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
@@ -48,11 +48,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
   });
 
   // Localize the data
-  const localizedAxes = axes.map((axis: any) => ({
+  const localizedAxes = axes.map((axis) => ({
     id: axis.id,
     name: locale === "ar" ? axis.nameAr : axis.nameEn,
     description: locale === "ar" ? axis.descriptionAr : axis.descriptionEn,
-    domains: axis.domains.map((domain: any) => ({
+    domains: axis.domains.map((domain) => ({
       id: domain.id,
       code: domain.code,
       name: locale === "ar" ? domain.nameAr : domain.nameEn,

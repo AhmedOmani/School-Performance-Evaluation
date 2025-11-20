@@ -11,7 +11,7 @@ type EvidencePageProps = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default async function EvidencePage({ params, searchParams }: EvidencePageProps) {
+export default async function EvidencePage({ params, searchParams: _searchParams }: EvidencePageProps) {
     const { locale: rawLocale } = await params;
     let locale: Locale = defaultLocale;
 

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/client";
 import {
   Search,
-  Filter,
+
   Download,
   ExternalLink,
   ChevronLeft,
@@ -71,7 +71,7 @@ type EvidenceListProps = {
 
 export function EvidenceList({ locale, domains }: EvidenceListProps) {
   const { t } = useTranslation("common");
-  const router = useRouter();
+
   const searchParams = useSearchParams();
 
   //filters
@@ -117,7 +117,7 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
   }, [statusFilter, domainFilter, page, locale]);
 
   //Handle download/view
-  const handleDownload = async (evidenceId: string, type: "FILE" | "LINK") => {
+  const handleDownload = async (evidenceId: string) => {
     try {
       const response = await fetch(`/api/evidence/${evidenceId}/download`);
       const data = await response.json();
@@ -320,7 +320,7 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDownload(item.id, item.type)}
+                  onClick={() => handleDownload(item.id)}
                   className="w-full gap-2"
                 >
                   {item.type === "FILE" ? <Download className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
