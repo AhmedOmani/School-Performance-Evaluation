@@ -7,11 +7,11 @@ import { AuthenticatedLayout } from "@/components/layouts/authenticated-layout";
 import { EvidenceList } from "@/components/evidence-list";
 
 type EvidencePageProps = {
-  params: Promise<{ locale?: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+    params: Promise<{ locale?: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default async function EvidencePage({params,searchParams}: EvidencePageProps) {
+export default async function EvidencePage({ params, searchParams }: EvidencePageProps) {
     const { locale: rawLocale } = await params;
     let locale: Locale = defaultLocale;
 
@@ -33,6 +33,13 @@ export default async function EvidencePage({params,searchParams}: EvidencePagePr
             id: true,
             nameEn: true,
             nameAr: true,
+            axis: {
+                select: {
+                    id: true,
+                    nameEn: true,
+                    nameAr: true,
+                }
+            }
         },
         orderBy: {
             nameEn: "asc",
