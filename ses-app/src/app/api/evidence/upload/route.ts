@@ -1,20 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/session";
-import { uploadFileToS3 , isS3Configured } from "@/lib/upload" ;
+import { uploadFileToS3, isS3Configured } from "@/lib/upload";
 
 export async function POST(request: NextRequest) {
     try {
         const user = await requireAuth();
+        // const user = { id: "cmi7x0qxg0000f11x5h34znt7" }; // Mock user for testing
 
-        const formData = await request.formData();
+        let formData;
+        try {
+            formData = await request.formData();
+        } catch (error) {
+            console.error("Error parsing form data:", error);
+            return NextResponse.json(
+                { error: "Failed to parse form data. The file might be too large or corrupted." },
+                { status: 400 }
+            );
+        }
         const title = formData.get("title") as string;
         const description = formData.get("description") as string | null;
         const domainId = formData.get("domainId") as string;
         const standardId = formData.get("standardId") as string;
         const indicatorId = formData.get("indicatorId") as string | null;
         const type = formData.get("type") as "FILE" | "LINK";
-        const file = formData.get("file") as File | null;
+        const filePath = formData.get("filePath") as string | null;
         const url = formData.get("url") as string | null;
 
         //validation
@@ -24,41 +34,15 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        if (type === "FILE" && !file) {
-            return NextResponse.json( { error: "File is required when type is FILE" }, { status: 400 });
+        if (type === "FILE" && !filePath) {
+            return NextResponse.json({ error: "File path is required when type is FILE" }, { status: 400 });
         }
 
         if (type === "LINK" && !url) {
             return NextResponse.json(
-              { error: "URL is required when type is LINK" },
-              { status: 400 }
+                { error: "URL is required when type is LINK" },
+                { status: 400 }
             );
-        }
-
-        // Validate file size
-        if (file && file.size > 50 * 1024 * 1024) {
-            return NextResponse.json({ error: "File size exceeds 50MB limit" },{ status: 400 });
-        }
-
-        // Upload file to S3 if type is FILE
-        let filePath: string | null = null;
-        if (type === "FILE" && file) {
-            if (!isS3Configured()) {
-                return NextResponse.json(
-                    { error: "S3 is not configured. Please check your environment variables." },
-                    { status: 500 }
-                );
-            }
-
-            try {
-                filePath = await uploadFileToS3(file, "evidence");
-            } catch (error) {
-                console.error("S3 upload error:", error);
-                return NextResponse.json(
-                    { error: "Failed to upload file to S3" },
-                    { status: 500 }
-                );
-            }
         }
 
         const evidence = await prisma.evidence.create({
@@ -69,8 +53,8 @@ export async function POST(request: NextRequest) {
                 standardId,
                 indicatorId: indicatorId || null,
                 type,
-                filePath, // null for LINK type
-                url: type === "LINK" ? url : null, // only set url for LINK type
+                filePath: type === "FILE" ? filePath : null,
+                url: type === "LINK" ? url : null,
                 status: "UNDER_REVIEW",
                 submittedById: user.id,
             },

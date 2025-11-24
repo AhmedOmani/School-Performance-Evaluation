@@ -44,6 +44,31 @@ export async function getPresignedUrl(s3Key: string, expiresIn: number = 3600): 
     return await getSignedUrl(s3Client, command, { expiresIn });
 }
 
+export async function getPresignedUploadUrl(
+    folder: string,
+    filename: string,
+    contentType: string,
+    expiresIn: number = 3600
+): Promise<{ uploadUrl: string; key: string }> {
+    if (!BUCKET_NAME) {
+        throw new Error("S3 bucket name is not configured.");
+    }
+
+    const fileExtension = filename.split(".").pop();
+    const uniqueFileName = `${uuidv4()}.${fileExtension}`;
+    const key = `${folder}/${uniqueFileName}`;
+
+    const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        ContentType: contentType,
+        ACL: "private",
+    });
+
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
+    return { uploadUrl, key };
+}
+
 export function isS3Configured(): boolean {
     return !!(process.env.AWS_ACCESS_KEY_ID &&
         process.env.AWS_SECRET_ACCESS_KEY &&

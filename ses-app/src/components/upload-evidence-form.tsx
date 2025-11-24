@@ -77,6 +77,43 @@ export function UploadEvidenceForm({
     }
 
     try {
+      let filePath = null;
+
+      // Step 1: Upload file to S3 if type is FILE
+      if (evidenceType === "FILE" && file) {
+        // 1. Get presigned URL
+        const urlResponse = await fetch("/api/evidence/upload-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+          }),
+        });
+
+        if (!urlResponse.ok) {
+          const errorData = await urlResponse.json();
+          throw new Error(errorData.error || "Failed to get upload URL");
+        }
+
+        const { uploadUrl, key } = await urlResponse.json();
+        filePath = key;
+
+        // 2. Upload file to S3 directly
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload file to storage");
+        }
+      }
+
+      // Step 2: Save metadata to database
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
@@ -85,8 +122,8 @@ export function UploadEvidenceForm({
       formData.append("indicatorId", selectedIndicatorId);
       formData.append("type", evidenceType);
 
-      if (evidenceType === "FILE" && file) {
-        formData.append("file", file);
+      if (filePath) {
+        formData.append("filePath", filePath);
       } else if (evidenceType === "LINK") {
         formData.append("url", url);
       }
@@ -99,7 +136,7 @@ export function UploadEvidenceForm({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to upload evidence");
+        throw new Error(data.error || "Failed to save evidence metadata");
       }
 
       // Success!

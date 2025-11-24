@@ -150,8 +150,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
               <Image
                 src="/preview.jpeg"
                 alt="System Preview"
-                width={900}
-                height={500}
+                width={800}
+                height={200}
                 className="rounded-lg shadow-sm"
                 priority
               />
