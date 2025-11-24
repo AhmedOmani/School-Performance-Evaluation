@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 
@@ -67,6 +67,19 @@ export async function getPresignedUploadUrl(
 
     const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
     return { uploadUrl, key };
+}
+
+export async function deleteFileFromS3(key: string): Promise<void> {
+    if (!BUCKET_NAME) {
+        throw new Error("S3 bucket name is not configured.");
+    }
+
+    const command = new DeleteObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+    });
+
+    await s3Client.send(command);
 }
 
 export function isS3Configured(): boolean {

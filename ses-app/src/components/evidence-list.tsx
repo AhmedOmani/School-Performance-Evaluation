@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -11,7 +12,13 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Layers,
+  LayoutGrid,
+  Flag,
+  Calendar,
+  User,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +89,7 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
   //Data
   const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -131,6 +139,30 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
     }
   }
 
+  const handleDelete = async (evidenceId: string) => {
+    if (!confirm(locale === "ar" ? "هل أنت متأكد من حذف هذا الدليل؟" : "Are you sure you want to delete this evidence?")) {
+      return;
+    }
+
+    setDeletingId(evidenceId);
+    try {
+      const response = await fetch(`/api/evidence/${evidenceId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete evidence");
+      }
+
+      setEvidence((prev) => prev.filter((item) => item.id !== evidenceId));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : locale === "ar" ? "فشل حذف الدليل" : "Failed to delete evidence");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const filteredEvidence = evidence.filter((item) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -171,24 +203,29 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">{t("navigation.evidence")}</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
+          <span className="bg-gradient-to-r from-primary via-blue-600 to-accent bg-clip-text text-transparent animate-gradient bg-300%">
+            {t("navigation.evidence")}
+          </span>
+        </h1>
+        <p className="text-lg text-muted-foreground">
           {locale === "ar"
             ? "عرض وإدارة جميع الأدلة المرفوعة"
             : "View and manage all uploaded evidence"}
         </p>
       </div>
 
-      <Card>
+      <Card className="border-primary/10 bg-card/50 backdrop-blur-sm shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg font-medium">
+          <CardTitle className="text-lg font-medium flex items-center gap-2 text-primary">
+            <Search className="h-5 w-5" />
             {locale === "ar" ? "تصفية البحث" : "Filter & Search"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             <div className="space-y-2">
               <Label>{locale === "ar" ? "بحث" : "Search"}</Label>
               <div className="relative">
@@ -197,7 +234,7 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
                   placeholder={locale === "ar" ? "ابحث في العنوان..." : "Search by title..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 border-primary/20 focus-visible:ring-primary/30"
                 />
               </div>
             </div>
@@ -210,6 +247,7 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
                   setStatusFilter(e.target.value);
                   setPage(1);
                 }}
+                className="border-primary/20 focus-visible:ring-primary/30"
               >
                 <option value="">{locale === "ar" ? "جميع الحالات" : "All Statuses"}</option>
                 <option value="UNDER_REVIEW">{locale === "ar" ? "قيد المراجعة" : "Under Review"}</option>
@@ -226,6 +264,7 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
                   setDomainFitler(e.target.value);
                   setPage(1);
                 }}
+                className="border-primary/20 focus-visible:ring-primary/30"
               >
                 <option value="">{locale === "ar" ? "جميع المجالات" : "All Domains"}</option>
                 {domains.map((domain) => (
@@ -240,7 +279,7 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
       </Card>
 
       {error && (
-        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive flex items-center gap-2">
+        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive flex items-center gap-2 border border-destructive/20">
           <AlertCircle className="h-4 w-4" />
           {error}
         </div>
@@ -248,85 +287,144 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
 
 
       {loading ? (
-        <div className="flex h-40 items-center justify-center text-muted-foreground border rounded-md bg-card">
-          {locale === "ar" ? "جاري التحميل..." : "Loading..."}
+        <div className="flex h-40 items-center justify-center text-muted-foreground border rounded-md bg-card/50 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p>{locale === "ar" ? "جاري التحميل..." : "Loading..."}</p>
+          </div>
         </div>
       ) : filteredEvidence.length === 0 ? (
-        <div className="flex h-40 flex-col items-center justify-center gap-2 text-muted-foreground border rounded-md bg-card">
-          <FileText className="h-8 w-8 opacity-50" />
-          <p>{locale === "ar" ? "لا توجد أدلة" : "No evidence found"}</p>
+        <div className="flex h-60 flex-col items-center justify-center gap-4 text-muted-foreground border rounded-md bg-card/50 backdrop-blur-sm border-dashed border-primary/20">
+          <div className="rounded-full bg-primary/10 p-4">
+            <FileText className="h-8 w-8 text-primary" />
+          </div>
+          <p className="text-lg font-medium">{locale === "ar" ? "لا توجد أدلة" : "No evidence found"}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
           {filteredEvidence.map((item) => (
-            <Card key={item.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <CardTitle className="text-lg font-semibold line-clamp-1" title={item.title}>
+            <Card key={item.id} className="group relative overflow-hidden border-primary/10 bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              {/* Gradient Top Strip */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-blue-500 to-accent opacity-80 group-hover:opacity-100 transition-opacity animate-gradient bg-300%" />
+
+              <CardHeader className="pb-3 pt-6">
+                <div className="flex justify-between items-start gap-3 mb-2">
+                  <CardTitle className="text-lg font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2" title={item.title}>
                     {item.title}
                   </CardTitle>
-                  <Badge variant={getStatusVariant(item.status)} className="shrink-0">
+                  <Badge variant={getStatusVariant(item.status) as any} className="shrink-0 shadow-sm px-2.5 py-0.5 text-xs font-semibold">
                     {getStatusText(item.status)}
                   </Badge>
                 </div>
                 {item.description && (
-                  <CardDescription className="line-clamp-2" title={item.description}>
+                  <CardDescription className="line-clamp-2 text-sm mt-1" title={item.description}>
                     {item.description}
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="flex-1 space-y-4">
 
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground">
-                    {locale === "ar" ? "المحور" : "Axis"}
+              <CardContent className="space-y-4 pb-4">
+                <div className="grid gap-3">
+                  {/* Axis */}
+                  <div className="flex items-start gap-3 p-2 rounded-lg bg-secondary/30 group-hover:bg-secondary/50 transition-colors">
+                    <div className="mt-0.5 p-1.5 rounded-md bg-primary/10 text-primary shrink-0">
+                      <Layers className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        {locale === "ar" ? "المحور" : "Axis"}
+                      </p>
+                      <p className="text-sm font-medium text-foreground leading-tight">
+                        {locale === "ar" ? item.domain.axis.nameAr : item.domain.axis.nameEn}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-sm font-medium">
-                    {locale === "ar" ? item.domain.axis.nameAr : item.domain.axis.nameEn}
+
+                  {/* Domain */}
+                  <div className="flex items-start gap-3 p-2 rounded-lg bg-secondary/30 group-hover:bg-secondary/50 transition-colors">
+                    <div className="mt-0.5 p-1.5 rounded-md bg-blue-500/10 text-blue-600 shrink-0">
+                      <LayoutGrid className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        {locale === "ar" ? "المجال" : "Domain"}
+                      </p>
+                      <p className="text-sm font-medium text-foreground leading-tight">
+                        {locale === "ar" ? item.domain.nameAr : item.domain.nameEn}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Standard */}
+                  <div className="flex items-start gap-3 p-2 rounded-lg bg-secondary/30 group-hover:bg-secondary/50 transition-colors">
+                    <div className="mt-0.5 p-1.5 rounded-md bg-accent/10 text-accent shrink-0">
+                      <Flag className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        {locale === "ar" ? "المعيار" : "Standard"}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 h-5 border-primary/20 text-primary bg-primary/5">
+                          {item.standard.code}
+                        </Badge>
+                        <p className="text-sm font-medium text-foreground leading-tight line-clamp-1">
+                          {locale === "ar" ? item.standard.nameAr : item.standard.nameEn}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground">
-                    {locale === "ar" ? "المجال" : "Domain"}
-                  </div>
-                  <div className="text-sm font-medium">
-                    {locale === "ar" ? item.domain.nameAr : item.domain.nameEn}
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground">
-                    {locale === "ar" ? "المعيار" : "Standard"}
-                  </div>
-                  <div className="text-sm">
-                    <span className="inline-block bg-muted px-1.5 py-0.5 rounded text-xs font-mono mr-2">
-                      {item.standard.code}
+                <div className="pt-4 mt-2 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5" title={new Date(item.submittedAt).toLocaleString(locale === "ar" ? "ar-SA" : "en-US")}>
+                    <Calendar className="h-3.5 w-3.5 text-primary/60" />
+                    <span>
+                      {new Date(item.submittedAt).toLocaleDateString(locale === "ar" ? "ar-SA-u-ca-gregory" : "en-US")}
                     </span>
-                    {locale === "ar" ? item.standard.nameAr : item.standard.nameEn}
                   </div>
-                </div>
-
-                <div className="pt-4 mt-4 border-t flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    {new Date(item.submittedAt).toLocaleDateString(locale === "ar" ? "ar-SA-u-ca-gregory" : "en-US")}
-                  </span>
-                  <span className="font-medium truncate max-w-[120px]" title={item.submittedBy.name}>
-                    {item.submittedBy.name}
-                  </span>
+                  <div className="flex items-center gap-1.5 max-w-[140px]" title={item.submittedBy.name}>
+                    <User className="h-3.5 w-3.5 text-primary/60" />
+                    <span className="truncate font-medium">
+                      {item.submittedBy.name}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
-              <CardFooter className="pt-0">
+
+              <CardFooter className="pt-0 pb-5 px-5 gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleDownload(item.id)}
-                  className="w-full gap-2"
+                  className="w-full gap-2 h-10 border-primary/20 hover:bg-gradient-to-r hover:from-primary hover:to-blue-600 hover:text-white hover:border-transparent transition-all duration-300 group/btn shadow-sm"
                 >
-                  {item.type === "FILE" ? <Download className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
-                  {item.type === "FILE"
-                    ? locale === "ar" ? "تحميل الملف" : "Download File"
-                    : locale === "ar" ? "فتح الرابط" : "Open Link"}
+                  {item.type === "FILE" ? (
+                    <Download className="h-4 w-4 group-hover/btn:animate-bounce" />
+                  ) : (
+                    <ExternalLink className="h-4 w-4 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                  )}
+                  <span className="font-semibold">
+                    {item.type === "FILE"
+                      ? locale === "ar" ? "تحميل الملف" : "Download File"
+                      : locale === "ar" ? "فتح الرابط" : "Open Link"}
+                  </span>
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDelete(item.id)}
+                  disabled={deletingId === item.id}
+                  className="gap-2 h-10 shadow-sm hover:bg-red-600 transition-colors"
+                >
+                  {deletingId === item.id ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  <span className="font-semibold hidden sm:inline">
+                    {locale === "ar" ? "حذف" : "Delete"}
+                  </span>
                 </Button>
               </CardFooter>
             </Card>
@@ -336,26 +434,26 @@ export function EvidenceList({ locale, domains }: EvidenceListProps) {
 
       {/* Pagination */}
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between p-4 border-t bg-card rounded-md border">
+        <div className="flex items-center justify-between p-4 border-t bg-card/50 backdrop-blur-sm rounded-md border border-primary/10">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="gap-1"
+            className="gap-1 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
           >
             <ChevronLeft className="h-4 w-4" />
             {locale === "ar" ? "السابق" : "Previous"}
           </Button>
-          <span className="text-sm text-muted-foreground">
-            {locale === "ar" ? "صفحة" : "Page"} {page} {locale === "ar" ? "من" : "of"} {totalPages}
+          <span className="text-sm font-medium text-foreground">
+            {locale === "ar" ? "صفحة" : "Page"} <span className="text-primary">{page}</span> {locale === "ar" ? "من" : "of"} {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="gap-1"
+            className="gap-1 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
           >
             {locale === "ar" ? "التالي" : "Next"}
             <ChevronRight className="h-4 w-4" />

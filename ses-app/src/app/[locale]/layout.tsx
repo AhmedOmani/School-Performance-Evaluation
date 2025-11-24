@@ -32,10 +32,18 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
 
     return (
         <html lang={locale} dir={dir} suppressHydrationWarning>
-            <body>
+            <body className="relative min-h-screen bg-background font-sans antialiased overflow-x-hidden">
                 <Providers>
                     <TranslationProvider locale={locale} resources={resources}>
-                        <ThemeProvider>{children}</ThemeProvider>
+                        <ThemeProvider>
+                            {/* Background Orbs */}
+                            <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+                                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]" />
+                                <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] rounded-full bg-accent/5 blur-[120px]" />
+                                <div className="absolute bottom-[-10%] left-[20%] w-[35%] h-[35%] rounded-full bg-blue-400/5 blur-[120px]" />
+                            </div>
+                            {children}
+                        </ThemeProvider>
                     </TranslationProvider>
                 </Providers>
             </body>

@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { EvidenceTypeSelector } from "@/components/upload/evidence-type-selector";
 import { FileUploadZone } from "@/components/upload/file-upload-zone";
 import { CascadingSelects } from "@/components/upload/cascading-selects";
+import { FileText, Layers, Upload, Link } from "lucide-react";
 
 type UploadEvidenceFormProps = {
   locale: Locale;
@@ -159,19 +160,22 @@ export function UploadEvidenceForm({
   };
 
   return (
-    <div className="mx-auto max-w-5xl py-8">
+    <div className="py-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          {t("upload.title")}
+        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
+          <span className="bg-gradient-to-r from-primary via-blue-600 to-accent bg-clip-text text-transparent animate-gradient bg-300%">
+            {t("upload.title")}
+          </span>
         </h1>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-lg text-muted-foreground">
           {t("upload.subtitle")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {error && (
-          <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive font-medium border border-destructive/20">
+          <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive font-medium border border-destructive/20 flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
             {error}
           </div>
         )}
@@ -179,9 +183,17 @@ export function UploadEvidenceForm({
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Left Column: Main Info */}
           <div className="lg:col-span-2 space-y-8">
-            <Card>
+            <Card className="relative overflow-hidden border-primary/10 bg-card/50 backdrop-blur-sm shadow-sm">
+              {/* Gradient Top Strip */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-blue-500 to-accent animate-gradient bg-300%" />
+
               <CardHeader>
-                <CardTitle>{locale === "ar" ? "تفاصيل الدليل" : "Evidence Details"}</CardTitle>
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="p-2 rounded-md bg-primary/10 text-primary">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-primary">{locale === "ar" ? "تفاصيل الدليل" : "Evidence Details"}</CardTitle>
+                </div>
                 <CardDescription>
                   {locale === "ar" ? "أدخل المعلومات الأساسية للدليل" : "Enter the basic information for the evidence"}
                 </CardDescription>
@@ -199,6 +211,7 @@ export function UploadEvidenceForm({
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder={locale === "ar" ? "مثال: خطة الأنشطة المدرسية" : "e.g., School Activities Plan"}
                     required
+                    className="border-primary/20 focus-visible:ring-primary/30"
                   />
                 </div>
 
@@ -212,16 +225,24 @@ export function UploadEvidenceForm({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex min-h-[80px] w-full rounded-md border border-primary/20 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder={locale === "ar" ? "وصف مختصر للدليل..." : "Brief description of the evidence..."}
                   />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="relative overflow-hidden border-primary/10 bg-card/50 backdrop-blur-sm shadow-sm">
+              {/* Gradient Top Strip */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-blue-500 to-accent animate-gradient bg-300%" />
+
               <CardHeader>
-                <CardTitle>{locale === "ar" ? "تصنيف الدليل" : "Classification"}</CardTitle>
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="p-2 rounded-md bg-blue-500/10 text-blue-600">
+                    <Layers className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-primary">{locale === "ar" ? "تصنيف الدليل" : "Classification"}</CardTitle>
+                </div>
                 <CardDescription>
                   {locale === "ar" ? "حدد المجال والمعيار المرتبط بالدليل" : "Select the domain and standard related to the evidence"}
                 </CardDescription>
@@ -257,9 +278,17 @@ export function UploadEvidenceForm({
 
           {/* Right Column: Upload */}
           <div className="space-y-8">
-            <Card>
+            <Card className="relative overflow-hidden border-primary/10 bg-card/50 backdrop-blur-sm shadow-sm h-fit sticky top-24">
+              {/* Gradient Top Strip */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-blue-500 to-accent animate-gradient bg-300%" />
+
               <CardHeader>
-                <CardTitle>{t("upload.fields.evidenceMethod")}</CardTitle>
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="p-2 rounded-md bg-accent/10 text-accent">
+                    {evidenceType === "FILE" ? <Upload className="h-5 w-5" /> : <Link className="h-5 w-5" />}
+                  </div>
+                  <CardTitle className="text-primary">{t("upload.fields.evidenceMethod")}</CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <EvidenceTypeSelector
@@ -270,7 +299,7 @@ export function UploadEvidenceForm({
                   }}
                 />
 
-                <Separator />
+                <Separator className="bg-primary/10" />
 
                 {evidenceType === "FILE" ? (
                   <div className="space-y-4">
@@ -292,18 +321,19 @@ export function UploadEvidenceForm({
                       onChange={(e) => setUrl(e.target.value)}
                       placeholder="https://example.com"
                       required={evidenceType === "LINK"}
+                      className="border-primary/20 focus-visible:ring-primary/30"
                     />
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 sticky top-[32rem]">
               <Button
                 type="submit"
                 size="lg"
                 disabled={loading}
-                className="w-full"
+                className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:scale-[1.02]"
               >
                 {loading
                   ? locale === "ar" ? "جاري الرفع..." : "Uploading..."
@@ -314,7 +344,7 @@ export function UploadEvidenceForm({
                 variant="outline"
                 size="lg"
                 onClick={() => router.push(`/${locale}/dashboard`)}
-                className="w-full"
+                className="w-full border-primary/20 hover:bg-primary/5 hover:text-primary"
               >
                 {t("actions.cancel")}
               </Button>

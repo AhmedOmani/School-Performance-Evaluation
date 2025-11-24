@@ -36,8 +36,10 @@ export function DomainItem({ domain }: DomainItemProps) {
     return (
         <div
             className={cn(
-                "rounded-xl border bg-card transition-all duration-200 shadow-sm",
-                isOpen ? "ring-2 ring-primary/10 shadow-md" : "hover:shadow-md hover:border-primary/20"
+                "rounded-xl border bg-card transition-all duration-300 shadow-sm",
+                isOpen
+                    ? "ring-2 ring-primary/10 shadow-md border-primary/20"
+                    : "hover:shadow-lg hover:shadow-accent/10 hover:border-accent/30"
             )}
         >
             <div
@@ -46,10 +48,10 @@ export function DomainItem({ domain }: DomainItemProps) {
             >
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                        <Badge variant={isOpen ? "default" : "outline"} className="text-xs px-2.5 py-0.5 h-6 transition-colors">
+                        <Badge variant={isOpen ? "default" : "outline"} className="text-sm px-3 py-1 h-7 transition-colors">
                             {domain.code}
                         </Badge>
-                        <span className="font-semibold text-base text-foreground">{domain.name}</span>
+                        <span className="font-bold text-2xl text-foreground">{domain.name}</span>
                     </div>
                     {domain.standards && domain.standards.length > 0 && (
                         <div className={cn(
@@ -61,7 +63,7 @@ export function DomainItem({ domain }: DomainItemProps) {
                     )}
                 </div>
                 {domain.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 pl-1">
+                    <p className="text-base text-muted-foreground line-clamp-2 pl-1 mt-1">
                         {domain.description}
                     </p>
                 )}
@@ -96,7 +98,9 @@ function StandardItem({ standard }: { standard: Standard }) {
         <div
             className={cn(
                 "rounded-lg border transition-all duration-200",
-                isOpen ? "bg-muted/40 border-primary/20 shadow-sm" : "bg-muted/30 border-transparent hover:border-border/50"
+                isOpen
+                    ? "bg-muted/40 border-primary/20 shadow-sm"
+                    : "bg-muted/30 border-transparent hover:border-accent/30 hover:bg-accent/5"
             )}
         >
             <div
@@ -105,13 +109,13 @@ function StandardItem({ standard }: { standard: Standard }) {
             >
                 <Badge
                     variant="secondary"
-                    className="px-2 py-0.5 text-[11px] font-mono shrink-0 h-6 flex items-center bg-background border shadow-sm text-primary mt-0.5"
+                    className="px-2.5 py-1 text-xs font-mono shrink-0 h-7 flex items-center bg-background border shadow-sm text-primary mt-0.5"
                 >
                     {standard.code}
                 </Badge>
                 <div className="flex-1">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground leading-relaxed">
+                        <span className="text-lg font-semibold text-foreground leading-relaxed">
                             {standard.name}
                         </span>
                         {standard.indicators && standard.indicators.length > 0 && (
@@ -137,11 +141,11 @@ function StandardItem({ standard }: { standard: Standard }) {
                         <div className="px-3 pb-3 pt-0">
                             <div className="pl-3 ml-2 border-l-2 border-primary/10 space-y-2 pt-1">
                                 {standard.indicators.map((indicator) => (
-                                    <div key={indicator.id} className="group flex items-start gap-2 text-xs pl-3 py-1.5 rounded-md hover:bg-background/80 transition-colors">
-                                        <span className="font-mono text-muted-foreground/70 shrink-0 font-semibold text-[10px] pt-0.5 group-hover:text-primary transition-colors">
+                                    <div key={indicator.id} className="group flex items-start gap-2 text-base pl-3 py-2 rounded-md hover:bg-background/80 transition-colors">
+                                        <span className="font-mono text-muted-foreground/80 shrink-0 font-bold text-base pt-0.5 group-hover:text-primary transition-colors">
                                             {indicator.code}
                                         </span>
-                                        <span className="text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
+                                        <span className="text-lg font-medium text-foreground leading-relaxed">
                                             {indicator.description}
                                         </span>
                                     </div>

@@ -1,43 +1,53 @@
 {
-    "app": {
-      "title": "School Performance Evaluation System for Modern Era School",
-      "tagline": "Streamline evidence management and performance tracking"
-    },
-    "navigation": {
-      "dashboard": "Dashboard",
-      "evidence": "Evidence",
-      "upload": "Upload",
-      "reports": "Reports",
-      "users": "Users"
+  "app": {
+    "title": "School Performance Evaluation System for Modern Era School",
+    "tagline": "Streamline evidence management and performance tracking"
+  },
+  "hero": {
+    "title": "School Performance Evaluation System",
+    "subtitle": "Towards a renewed school in its performance... documented in its evidence... distinguished in its results.",
+    "description": "A comprehensive platform for managing and evaluating school performance indicators, ensuring quality and excellence in education.",
+    "cta": "Start Now",
+    "secondaryCta": "Learn More"
+  },
+  "features": {
+    "title": "Main Axes and Sub-fields"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "evidence": "Evidence",
+    "upload": "Upload",
+    "reports": "Reports",
+    "users": "Users"
+  },
+  "actions": {
+    "switchLanguage": "العربية",
+    "toggleDarkMode": "Toggle Dark Mode",
+    "login": "Login",
+    "logout": "Logout",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "home": {
+    "nextSteps": "Start by uploading evidence or viewing the dashboard."
+  },
+  "upload": {
+    "title": "Upload Evidence",
+    "subtitle": "Upload school evidence and practices easily and securely",
+    "fields": {
+      "title": "Evidence Title",
+      "description": "Description",
+      "axis": "Axis",
+      "domain": "Domain",
+      "standard": "Standard",
+      "indicator": "Indicator",
+      "evidenceMethod": "Method of adding evidence",
+      "file": "File",
+      "url": "URL"
     },
     "actions": {
-      "switchLanguage": "العربية",
-      "toggleDarkMode": "Toggle Dark Mode",
-      "login": "Login",
-      "logout": "Logout",
-      "save": "Save",
-      "cancel": "Cancel"
-    },
-    "home": {
-      "nextSteps": "Start by uploading evidence or viewing the dashboard."
-    },
-    "upload": {
-      "title": "Upload Evidence",
-      "subtitle": "Upload school evidence and practices easily and securely",
-      "fields": {
-        "title": "Evidence Title",
-        "description": "Description",
-        "axis": "Axis",
-        "domain": "Domain",
-        "standard": "Standard",
-        "indicator": "Indicator",
-        "evidenceMethod": "Method of adding evidence",
-        "file": "File",
-        "url": "URL"
-      },
-      "actions": {
-        "uploadFile": "Upload file",
-        "enterLink": "Enter link"
-      }
+      "uploadFile": "Upload file",
+      "enterLink": "Enter link"
     }
+  }
 }
