@@ -25,15 +25,25 @@ type Standard = {
     domain: { id: string; nameEn: string; nameAr: string };
 };
 
+type Indicator = {
+    id: string;
+    code: string;
+    descriptionEn: string;
+    descriptionAr: string;
+    standard: { id: string; nameEn: string; nameAr: string };
+};
+
 interface CascadingSelectsProps {
     locale: Locale;
     axes: Axis[];
     selectedAxisId: string;
     selectedDomainId: string;
     selectedStandardId: string;
+    selectedIndicatorId: string;
     onAxisChange: (id: string) => void;
     onDomainChange: (id: string) => void;
     onStandardChange: (id: string) => void;
+    onIndicatorChange: (id: string) => void;
 }
 
 export function CascadingSelects({
@@ -42,14 +52,17 @@ export function CascadingSelects({
     selectedAxisId,
     selectedDomainId,
     selectedStandardId,
+    selectedIndicatorId,
     onAxisChange,
     onDomainChange,
     onStandardChange,
+    onIndicatorChange,
 }: CascadingSelectsProps) {
     const { t } = useTranslation("common");
 
     const [domains, setDomains] = useState<Domain[]>([]);
     const [standards, setStandards] = useState<Standard[]>([]);
+    const [indicators, setIndicators] = useState<Indicator[]>([]);
 
     // Fetch domains when axis changes
     useEffect(() => {
@@ -75,15 +88,34 @@ export function CascadingSelects({
         }
     }, [selectedDomainId]);
 
+    // Fetch indicators when standard changes
+    useEffect(() => {
+        if (selectedStandardId) {
+            fetch(`/api/indicators?standardId=${selectedStandardId}`)
+                .then((res) => res.json())
+                .then((data) => setIndicators(data.indicators || []))
+                .catch((err) => console.error("Error fetching indicators:", err));
+        } else {
+            setIndicators([]);
+        }
+    }, [selectedStandardId]);
+
     // Helper to get name based on locale
     const getName = (item: { nameEn: string; nameAr: string } | undefined) => {
         if (!item) return "";
         return locale === "ar" ? item.nameAr : item.nameEn;
     };
 
+    // Helper to get description based on locale (for indicators)
+    const getDescription = (item: { descriptionEn: string; descriptionAr: string } | undefined) => {
+        if (!item) return "";
+        return locale === "ar" ? item.descriptionAr : item.descriptionEn;
+    };
+
     const selectedAxis = axes.find((a) => a.id === selectedAxisId);
     const selectedDomain = domains.find((d) => d.id === selectedDomainId);
     const selectedStandard = standards.find((s) => s.id === selectedStandardId);
+    const selectedIndicator = indicators.find((i) => i.id === selectedIndicatorId);
 
     return (
         <div className="grid gap-6 md:grid-cols-2">
@@ -145,6 +177,27 @@ export function CascadingSelects({
                         ))}
                     </Select>
                 </div>
+
+                {/* Indicator Select */}
+                <div className="space-y-2">
+                    <Label>{locale === "ar" ? "المؤشر" : "Indicator"} <span className="text-destructive">*</span></Label>
+                    <Select
+                        value={selectedIndicatorId}
+                        onChange={(e) => onIndicatorChange(e.target.value)}
+                        disabled={!selectedStandardId}
+                    >
+                        <option value="">
+                            {locale === "ar"
+                                ? selectedStandardId ? "اختر المؤشر" : "اختر المعيار أولاً"
+                                : selectedStandardId ? "Select Indicator" : "Select Standard first"}
+                        </option>
+                        {indicators.map((indicator) => (
+                            <option key={indicator.id} value={indicator.id}>
+                                {getDescription(indicator)}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
             </div>
 
             {/* Summary Card */}
@@ -189,6 +242,18 @@ export function CascadingSelects({
                                         {t("upload.fields.standard")}
                                     </p>
                                     <p className="font-medium">{selectedStandard ? getName(selectedStandard) : "—"}</p>
+                                </div>
+                            </div>
+
+                            <div className={cn("flex gap-3 transition-opacity", selectedIndicator ? "opacity-100" : "opacity-30")}>
+                                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+                                    <FileText className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                        {locale === "ar" ? "المؤشر" : "Indicator"}
+                                    </p>
+                                    <p className="font-medium">{selectedIndicator ? getDescription(selectedIndicator) : "—"}</p>
                                 </div>
                             </div>
                         </div>

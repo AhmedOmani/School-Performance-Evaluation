@@ -5,10 +5,17 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface Indicator {
+    id: string;
+    code: string;
+    description: string | null;
+}
+
 interface Standard {
     id: string;
     code: string;
     name: string;
+    indicators?: Indicator[];
 }
 
 interface Domain {
@@ -29,57 +36,121 @@ export function DomainItem({ domain }: DomainItemProps) {
     return (
         <div
             className={cn(
-                "rounded-lg border bg-card transition-all duration-200",
-                isOpen ? "bg-accent/50 ring-1 ring-primary/20" : "hover:bg-accent/50"
+                "rounded-xl border bg-card transition-all duration-200 shadow-sm",
+                isOpen ? "ring-2 ring-primary/10 shadow-md" : "hover:shadow-md hover:border-primary/20"
             )}
         >
             <div
-                className="p-3 cursor-pointer"
+                className="p-4 cursor-pointer"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm">{domain.name}</span>
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] h-5">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                        <Badge variant={isOpen ? "default" : "outline"} className="text-xs px-2.5 py-0.5 h-6 transition-colors">
                             {domain.code}
                         </Badge>
-                        {domain.standards && domain.standards.length > 0 && (
-                            <div className="text-muted-foreground">
-                                {isOpen ? (
-                                    <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                    <ChevronDown className="h-4 w-4" />
-                                )}
-                            </div>
-                        )}
+                        <span className="font-semibold text-base text-foreground">{domain.name}</span>
                     </div>
+                    {domain.standards && domain.standards.length > 0 && (
+                        <div className={cn(
+                            "text-muted-foreground transition-transform duration-200 bg-muted/50 rounded-full p-1",
+                            isOpen && "rotate-180 bg-primary/10 text-primary"
+                        )}>
+                            <ChevronDown className="h-4 w-4" />
+                        </div>
+                    )}
                 </div>
                 {domain.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">
+                    <p className="text-sm text-muted-foreground line-clamp-2 pl-1">
                         {domain.description}
                     </p>
                 )}
             </div>
 
-            {isOpen && domain.standards && domain.standards.length > 0 && (
-                <div className="px-3 pb-3 pt-0 animate-in slide-in-from-top-1 fade-in-0 duration-200">
-                    <div className="space-y-1.5 border-t pt-2">
-                        {domain.standards.map((standard) => (
-                            <div key={standard.id} className="flex items-start gap-2 text-xs">
-                                <Badge
-                                    variant="secondary"
-                                    className="px-1.5 py-0 text-[10px] font-mono shrink-0 h-5 flex items-center"
-                                >
-                                    {standard.code}
-                                </Badge>
-                                <span className="text-muted-foreground leading-tight pt-0.5">
-                                    {standard.name}
-                                </span>
+            <div
+                className={cn(
+                    "grid transition-all duration-300 ease-in-out",
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                )}
+            >
+                <div className="overflow-hidden">
+                    {domain.standards && domain.standards.length > 0 && (
+                        <div className="px-4 pb-4 pt-0">
+                            <div className="space-y-3 border-t pt-4">
+                                {domain.standards.map((standard) => (
+                                    <StandardItem key={standard.id} standard={standard} />
+                                ))}
                             </div>
-                        ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function StandardItem({ standard }: { standard: Standard }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div
+            className={cn(
+                "rounded-lg border transition-all duration-200",
+                isOpen ? "bg-muted/40 border-primary/20 shadow-sm" : "bg-muted/30 border-transparent hover:border-border/50"
+            )}
+        >
+            <div
+                className="p-3 cursor-pointer flex items-start gap-3"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <Badge
+                    variant="secondary"
+                    className="px-2 py-0.5 text-[11px] font-mono shrink-0 h-6 flex items-center bg-background border shadow-sm text-primary mt-0.5"
+                >
+                    {standard.code}
+                </Badge>
+                <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground leading-relaxed">
+                            {standard.name}
+                        </span>
+                        {standard.indicators && standard.indicators.length > 0 && (
+                            <div className={cn(
+                                "text-muted-foreground transition-transform duration-200 ml-2 shrink-0",
+                                isOpen && "rotate-180 text-primary"
+                            )}>
+                                <ChevronDown className="h-4 w-4" />
+                            </div>
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
+
+            <div
+                className={cn(
+                    "grid transition-all duration-300 ease-in-out",
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                )}
+            >
+                <div className="overflow-hidden">
+                    {standard.indicators && standard.indicators.length > 0 && (
+                        <div className="px-3 pb-3 pt-0">
+                            <div className="pl-3 ml-2 border-l-2 border-primary/10 space-y-2 pt-1">
+                                {standard.indicators.map((indicator) => (
+                                    <div key={indicator.id} className="group flex items-start gap-2 text-xs pl-3 py-1.5 rounded-md hover:bg-background/80 transition-colors">
+                                        <span className="font-mono text-muted-foreground/70 shrink-0 font-semibold text-[10px] pt-0.5 group-hover:text-primary transition-colors">
+                                            {indicator.code}
+                                        </span>
+                                        <span className="text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
+                                            {indicator.description}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

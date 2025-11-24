@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { LanguageSwitch } from "@/components/language-switch";
@@ -43,6 +44,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 code: true,
                 nameEn: true,
                 nameAr: true,
+                indicators: {
+                  select: {
+                    id: true,
+                    code: true,
+                    descriptionEn: true,
+                    descriptionAr: true,
+                  },
+                },
               },
             },
           },
@@ -69,6 +78,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
           id: standard.id,
           code: standard.code,
           name: locale === "ar" ? standard.nameAr : standard.nameEn,
+          indicators: standard.indicators.map((indicator) => ({
+            id: indicator.id,
+            code: indicator.code,
+            description: locale === "ar" ? indicator.descriptionAr : indicator.descriptionEn,
+          })),
         })),
       })),
     }));
@@ -129,6 +143,20 @@ export default async function LandingPage({ params }: LandingPageProps) {
               </Button>
             </div>
           </div>
+
+          {/* Hero Image */}
+          <div className="mt-16 flex justify-center sm:mt-20">
+            <div className="relative rounded-xl border bg-muted/50 p-2 shadow-2xl lg:rounded-2xl lg:p-4">
+              <Image
+                src="/preview.jpeg"
+                alt="System Preview"
+                width={900}
+                height={500}
+                className="rounded-lg shadow-sm"
+                priority
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -148,7 +176,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 grid-cols-1 max-w-4xl mx-auto">
             {localizedAxes.map((axis: any, index: number) => (
               <Card key={axis.id} className="flex flex-col transition-all hover:shadow-lg hover:-translate-y-1">
                 <CardHeader>

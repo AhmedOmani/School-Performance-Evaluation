@@ -34,6 +34,7 @@ export function UploadEvidenceForm({
   const [selectedAxisId, setSelectedAxisId] = useState<string>("");
   const [selectedDomainId, setSelectedDomainId] = useState<string>("");
   const [selectedStandardId, setSelectedStandardId] = useState<string>("");
+  const [selectedIndicatorId, setSelectedIndicatorId] = useState<string>("");
   const [evidenceType, setEvidenceType] = useState<"FILE" | "LINK">("FILE");
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState("");
@@ -48,7 +49,7 @@ export function UploadEvidenceForm({
     setLoading(true);
 
     // Validation
-    if (!title || !selectedDomainId || !selectedStandardId) {
+    if (!title || !selectedDomainId || !selectedStandardId || !selectedIndicatorId) {
       const errorMsg = locale === "ar"
         ? "يرجى ملء جميع الحقول المطلوبة"
         : "Please fill all required fields";
@@ -81,6 +82,7 @@ export function UploadEvidenceForm({
       formData.append("description", description);
       formData.append("domainId", selectedDomainId);
       formData.append("standardId", selectedStandardId);
+      formData.append("indicatorId", selectedIndicatorId);
       formData.append("type", evidenceType);
 
       if (evidenceType === "FILE" && file) {
@@ -194,16 +196,23 @@ export function UploadEvidenceForm({
                   selectedAxisId={selectedAxisId}
                   selectedDomainId={selectedDomainId}
                   selectedStandardId={selectedStandardId}
+                  selectedIndicatorId={selectedIndicatorId}
                   onAxisChange={(id) => {
                     setSelectedAxisId(id);
                     setSelectedDomainId("");
                     setSelectedStandardId("");
+                    setSelectedIndicatorId("");
                   }}
                   onDomainChange={(id) => {
                     setSelectedDomainId(id);
                     setSelectedStandardId("");
+                    setSelectedIndicatorId("");
                   }}
-                  onStandardChange={setSelectedStandardId}
+                  onStandardChange={(id) => {
+                    setSelectedStandardId(id);
+                    setSelectedIndicatorId("");
+                  }}
+                  onIndicatorChange={setSelectedIndicatorId}
                 />
               </CardContent>
             </Card>

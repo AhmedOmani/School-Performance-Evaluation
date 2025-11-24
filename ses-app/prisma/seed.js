@@ -1,408 +1,366 @@
-import { PrismaClient } from "@prisma/client";
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // =========================================================
-  // AXIS 1 – Quality of Learning Outcomes
-  // =========================================================
-  console.log("🌱 Seeding Axis 1: Quality of Learning Outcomes...");
+  console.log('Start seeding...');
 
-  const axis1 = await prisma.axis.upsert({
-    where: { id: "axis-1-learning-outcomes" },
+  // --- 1. Seed Admin User ---
+  const email = "alahda2022@gmail.com";
+  const password = "Admin@123";
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await prisma.user.upsert({
+    where: { email },
     update: {},
     create: {
-      id: "axis-1-learning-outcomes",
-      nameEn: "Quality of Learning Outcomes",
-      nameAr: "جودة نواتج التعلم",
-      descriptionEn:
-        "Explore the three axes and the domains associated with each axis to learn about the required indicators and evidence.",
-      descriptionAr:
-        "استكشف المحاور الثلاثة والمجالات المرتبطة بكل محور لمعرفة المؤشرات والأدلة المطلوبة.",
+      email,
+      name: "Admin User",
+      passwordHash: hashedPassword,
+      role: "SYSTEM_MANAGER",
     },
   });
 
-  // ---------- Domain 1.1 – Academic Achievement ----------
-  const domainAcademic = await prisma.domain.upsert({
-    where: { id: "domain-1-1-academic-achievement" },
-    update: {},
-    create: {
-      id: "domain-1-1-academic-achievement",
-      code: "D1.1",
-      nameEn: "Academic Achievement",
-      nameAr: "الإنجاز الدراسي",
-      descriptionEn:
-        "Measures student academic performance and learning outcomes.",
-      descriptionAr: "يقيس الأداء الأكاديمي للطلاب ونواتج التعلم.",
+  console.log(`✅ Admin user created: ${user.email}`);
+
+  // --- 2. Define AXES ---
+
+  // Axis 1: Quality of Learning Outcomes
+  const axis1 = await prisma.axis.create({
+    data: {
+      nameEn: 'Quality of Learning Outcomes',
+      nameAr: 'جودة نواتج التعلم',
+    },
+  });
+
+  // Axis 2: Quality of School Processes
+  const axis2 = await prisma.axis.create({
+    data: {
+      nameEn: 'Quality of School Processes',
+      nameAr: 'جودة عمليات المدرسة',
+    },
+  });
+
+  // Axis 3: Assurance of Learning and School Processes Quality
+  const axis3 = await prisma.axis.create({
+    data: {
+      nameEn: 'Assurance of Learning and School Processes Quality',
+      nameAr: 'ضمان جودة التعلم وعمليات المدرسة',
+    },
+  });
+
+  // --- 3. Define DOMAINS, STANDARDS, and INDICATORS ---
+
+  const domainData = [
+    // --- AXIS 1: Quality of Learning Outcomes ---
+    {
       axisId: axis1.id,
+      code: 'D1',
+      nameEn: 'Academic Achievement',
+      nameAr: 'الإنجاز الدراسي',
+      standards: [
+        {
+          code: '1.1',
+          nameEn: 'Academic Achievement',
+          nameAr: 'التحصيل الدراسي',
+          indicators: [
+            { code: '1.1.1', descriptionEn: 'Achievement Levels', descriptionAr: 'المستويات التحصيلية' },
+            { code: '1.1.2', descriptionEn: 'Achievement in Classroom and Non-Classroom Activities', descriptionAr: 'التحصيل في الأعمال الصفية وغير الصفية' },
+            { code: '1.1.3', descriptionEn: 'Equity of Academic Achievement', descriptionAr: 'عدالة التحصيل الدراسي' },
+          ],
+        },
+        {
+          code: '1.2',
+          nameEn: 'Academic Progress',
+          nameAr: 'التقدم الدراسي',
+          indicators: [
+            { code: '1.2.1', descriptionEn: 'Achievement Levels Over Time', descriptionAr: 'المستويات التحصيلية بمرور الوقت' },
+            { code: '1.2.2', descriptionEn: 'Academic Progress in Classroom Sessions', descriptionAr: 'التقدم الدراسي في الحصص الدراسية' },
+            { code: '1.2.3', descriptionEn: 'Progress of Students with Special Needs', descriptionAr: 'تقدم الطلبة ذوي الاحتياجات الخاصة' },
+          ],
+        },
+        {
+          code: '1.3',
+          nameEn: 'Learning Skills',
+          nameAr: 'مهارات التعلم',
+          indicators: [
+            { code: '1.3.1', descriptionEn: 'Self-Learning Skills', descriptionAr: 'مهارات التعلم الذاتي' },
+            { code: '1.3.2', descriptionEn: 'Collaborative Learning Skills', descriptionAr: 'مهارات التعلم التعاوني' },
+            { code: '1.3.3', descriptionEn: 'Higher-Order Thinking Skills', descriptionAr: 'مهارات التفكير العليا' },
+            { code: '1.3.4', descriptionEn: 'Application of Learning in Daily Life', descriptionAr: 'تطبيق التعلم في الحياة اليومية' },
+            { code: '1.3.5', descriptionEn: 'Digital Skills', descriptionAr: 'المهارات الرقمية' },
+            { code: '1.3.6', descriptionEn: 'Reading Culture', descriptionAr: 'ثقافة القراءة' },
+          ],
+        },
+      ],
     },
-  });
-
-  // ---------- Domain 1.2 – Personal Growth ----------
-  const domainPersonal = await prisma.domain.upsert({
-    where: { id: "domain-1-2-personal-growth" },
-    update: {},
-    create: {
-      id: "domain-1-2-personal-growth",
-      code: "D1.2",
-      nameEn: "Personal Growth",
-      nameAr: "النمو الشخصي",
-      descriptionEn:
-        "Supports students' personal, social, and emotional development.",
-      descriptionAr:
-        "يدعم النمو الشخصي والاجتماعي والانفعالي للطلاب.",
+    {
       axisId: axis1.id,
+      code: 'D2',
+      nameEn: 'Personal Growth',
+      nameAr: 'النمو الشخصي',
+      standards: [
+        {
+          code: '2.1',
+          nameEn: 'Values and Behavior',
+          nameAr: 'القيم والسلوك',
+          indicators: [
+            { code: '2.1.1', descriptionEn: 'Adherence to Shared Human Values', descriptionAr: 'التمسك بالقيم الإنسانية المشتركة' },
+            { code: '2.1.2', descriptionEn: 'Awareness of Rights and Duties', descriptionAr: 'إدراك الحقوق والواجبات' },
+            { code: '2.1.3', descriptionEn: 'Enthusiasm and Motivation for Learning', descriptionAr: 'الحماس والدافعية للتعلم' },
+          ],
+        },
+        {
+          code: '2.2',
+          nameEn: 'Identity and Citizenship',
+          nameAr: 'الهوية والمواطنة',
+          indicators: [
+            { code: '2.2.1', descriptionEn: 'Pride in Omani Identity, History, Culture, Loyalty to the Nation and the Sultan', descriptionAr: 'الاعتزاز بالهوية العُمانية وتاريخ سلطنة عمان وثقافتها، والولاء للوطن والسلطان' },
+            { code: '2.2.2', descriptionEn: 'Belonging to the Arab and Islamic Identity, and Appreciation of the Arabic Language', descriptionAr: 'الانتماء للهوية العربية والإسلامية، وتقدير اللغة العربية' },
+            { code: '2.2.3', descriptionEn: 'Participation in Volunteer Work', descriptionAr: 'المشاركة في العمل التطوعي' },
+            { code: '2.2.4', descriptionEn: 'Practicing Consultation and Electoral Culture', descriptionAr: 'ممارسات الشورى والثقافة الانتخابية' },
+          ],
+        },
+        {
+          code: '2.3',
+          nameEn: 'Health and Environmental Awareness',
+          nameAr: 'الوعي الصحي والبيئي',
+          indicators: [
+            { code: '2.3.1', descriptionEn: 'Commitment to Healthy and Safe Lifestyles', descriptionAr: 'الالتزام بأنماط الحياة السليمة والصحية' },
+            { code: '2.3.2', descriptionEn: 'Participation in Environmental and Climate Issues', descriptionAr: 'المشاركة في قضايا البيئة والمناخ' },
+          ],
+        },
+        {
+          code: '2.4',
+          nameEn: 'Innovation and Entrepreneurship',
+          nameAr: 'الابتكار وريادة الأعمال',
+          indicators: [
+            { code: '2.4.1', descriptionEn: 'Initiative in Presenting Ideas and Launching Projects', descriptionAr: 'المبادرة في طرح الأفكار وإطلاق المشروعات' },
+            { code: '2.4.2', descriptionEn: 'Project Management to Achieve Results', descriptionAr: 'إدارة المشروعات لتحقيق النتائج' },
+            { code: '2.4.3', descriptionEn: 'Commitment to Work Ethics', descriptionAr: 'الالتزام بأخلاقيات العمل' },
+            { code: '2.4.4', descriptionEn: 'Communication and Team Leadership', descriptionAr: 'التواصل وقيادة الفرق' },
+          ],
+        },
+      ],
     },
-  });
 
-  // ---------- Standards for Domain 1.1 – Academic Achievement ----------
-  const standardsDomain1 = [
+    // --- AXIS 2: Quality of School Processes ---
     {
-      id: "standard-1-0-self-eval-academic",
-      code: "D1.1-SE",
-      nameEn: "Self-Evaluation for Academic Achievement",
-      nameAr: "التقويم الذاتي لمجال الإنجاز الدراسي",
-    },
-    {
-      id: "standard-1-1-attainment",
-      code: "1.1",
-      nameEn: "Academic Attainment",
-      nameAr: "التحصيل الدراسي",
-    },
-    {
-      id: "standard-1-2-progress",
-      code: "1.2",
-      nameEn: "Academic Progress",
-      nameAr: "التقدم الدراسي",
-    },
-    {
-      id: "standard-1-3-learning-skills",
-      code: "1.3",
-      nameEn: "Learning Skills",
-      nameAr: "مهارات التعلم",
-    },
-  ];
-
-  for (const s of standardsDomain1) {
-    await prisma.standard.upsert({
-      where: { id: s.id },
-      update: {},
-      create: {
-        id: s.id,
-        code: s.code,
-        nameEn: s.nameEn,
-        nameAr: s.nameAr,
-        domainId: domainAcademic.id,
-      },
-    });
-  }
-
-  // ---------- Standards for Domain 1.2 – Personal Growth ----------
-  const standardsDomain2 = [
-    {
-      id: "standard-2-0-self-eval-growth",
-      code: "D1.2-SE",
-      nameEn: "Self-Evaluation for Personal Growth",
-      nameAr: "التقويم الذاتي لمجال النمو الشخصي",
-    },
-    {
-      id: "standard-2-1-values-behavior",
-      code: "2.1",
-      nameEn: "Values and Behavior",
-      nameAr: "القيم والسلوك",
-    },
-    {
-      id: "standard-2-2-identity-citizenship",
-      code: "2.2",
-      nameEn: "Identity and Citizenship",
-      nameAr: "الهوية والمواطنة",
-    },
-    {
-      id: "standard-2-3-health-environment",
-      code: "2.3",
-      nameEn: "Health and Environmental Awareness",
-      nameAr: "الوعي الصحي والبيئي",
-    },
-    {
-      id: "standard-2-4-innovation-entrepreneurship",
-      code: "2.4",
-      nameEn: "Innovation and Entrepreneurship",
-      nameAr: "الابتكار وريادة الأعمال",
-    },
-  ];
-
-  for (const s of standardsDomain2) {
-    await prisma.standard.upsert({
-      where: { id: s.id },
-      update: {},
-      create: {
-        id: s.id,
-        code: s.code,
-        nameEn: s.nameEn,
-        nameAr: s.nameAr,
-        domainId: domainPersonal.id,
-      },
-    });
-  }
-
-  console.log("✅ Axis 1 seeded.");
-
-  // =========================================================
-  // AXIS 2 – Quality of School Processes
-  // =========================================================
-  console.log("🌱 Seeding Axis 2: Quality of School Processes...");
-
-  const axis2 = await prisma.axis.upsert({
-    where: { id: "axis-2-school-processes" },
-    update: {},
-    create: {
-      id: "axis-2-school-processes",
-      nameEn: "Quality of School Processes",
-      nameAr: "جودة عمليات المدرسة",
-      descriptionEn:
-        "Covers the quality of teaching, assessment, school climate, and the learning environment.",
-      descriptionAr:
-        "يشمل جودة التدريس والتقويم، ومناخ المدرسة، وبيئة التعلم.",
-    },
-  });
-
-  // ---------- Domain 2.1 – Teaching and Assessment ----------
-  const domainTeaching = await prisma.domain.upsert({
-    where: { id: "domain-2-1-teaching-assessment" },
-    update: {},
-    create: {
-      id: "domain-2-1-teaching-assessment",
-      code: "D2.1",
-      nameEn: "Teaching and Assessment",
-      nameAr: "التدريس والتقويم",
-      descriptionEn:
-        "Focuses on planning, delivering, and assessing teaching and learning.",
-      descriptionAr:
-        "يركز على تخطيط التدريس وتنفيذه وتقويم عملية التعلم.",
       axisId: axis2.id,
+      code: 'D3',
+      nameEn: 'Instruction and Assessment',
+      nameAr: 'التدريس والتقويم',
+      standards: [
+        {
+          code: '3.1',
+          nameEn: 'Curriculum Planning',
+          nameAr: 'تخطيط المنهاج الدراسي',
+          indicators: [
+            { code: '3.1.1', descriptionEn: 'Curriculum Planning to Achieve Learning Goals and Meet Student Needs', descriptionAr: 'تخطيط المنهاج الدراسي لتحقيق الكفايات، وتلبية احتياجات الطلبة' },
+            { code: '3.1.2', descriptionEn: 'Linking Study Materials to Support Curriculum Integration', descriptionAr: 'الربط بين المواد الدراسية لدعم التكامل المنهجي و ربط المنهاج بثقافة سلطنة عمان' },
+            { code: '3.1.3', descriptionEn: 'Alignment of the Curriculum with the following, considering student needs and differences', descriptionAr: 'مواءمة المنهاج بما يلي احتياجات جميع الطلبة ويراعي التمايز بينهم' },
+          ],
+        },
+        {
+          code: '3.2',
+          nameEn: 'Classroom Management',
+          nameAr: 'إدارة الصف',
+          indicators: [
+            { code: '3.2.1', descriptionEn: 'Management of Learning Time', descriptionAr: 'إدارة زمن التعلم' },
+            { code: '3.2.2', descriptionEn: 'Management of Student Behavior', descriptionAr: 'إدارة سلوك الطلبة' },
+            { code: '3.2.3', descriptionEn: 'Arousing Intrinsic Motivation for Learning commensurate with student abilities and maturity', descriptionAr: 'إثارة الدافعية للتعلم بما يتلاءم مع قدرات الطلبة و فئاتهم' },
+          ],
+        },
+        {
+          code: '3.3',
+          nameEn: 'Effectiveness of Instruction',
+          nameAr: 'فاعلية التدريس',
+          indicators: [
+            { code: '3.3.1', descriptionEn: "Teachers' Presentation of Lesson Content and Use of Learning Strategies", descriptionAr: 'تقديم المعلمين لمحتوى الدروس، واستخدام استراتيجيات التعلم' },
+            { code: '3.3.2', descriptionEn: 'Language of Instruction to Facilitate Learning', descriptionAr: 'لغة التدريس لتعزيز التعلم' },
+            { code: '3.3.3', descriptionEn: 'Employing Educational Resources and Means, including e-learning programs and platforms', descriptionAr: 'توظيف المصادر والوسائل التعليمية، بما في ذلك برامج التعلم الإلكتروني ومنصاته' },
+            { code: '3.3.4', descriptionEn: 'Enabling Students to Express their Opinions, apply what they learned, and learn from their mistakes', descriptionAr: 'تمكين الطلبة من التعبير عن آرائهم، وتطبيق ما تعلموه، والتعلم من أخطائهم' },
+            { code: '3.3.5', descriptionEn: 'Alignment of Teaching Strategies with the needs of students with special needs and disabilities', descriptionAr: 'مواءمة استراتيجيات التدريس مع متطلبات ذوي الاحتياجات الخاصة والإعاقة' },
+          ],
+        },
+        {
+          code: '3.4',
+          nameEn: 'Excellence in Learning Skills',
+          nameAr: 'تعزيز مهارات التعلم',
+          indicators: [
+            { code: '3.4.1', descriptionEn: "Linking Learning with Students' Realities and Lives", descriptionAr: 'ربط التعلم بواقع الطلبة وحياتهم' },
+            { code: '3.4.2', descriptionEn: 'Developing the Ability for Inquiry, Critical Thinking, and Reflection beyond the scope of study materials, enabling continuous learning', descriptionAr: 'تعزيز القدرة على التساؤل و التفكير التدبر بما يتعدى مساحة المواد الدراسية و يمكن من مواصلة التعلم' },
+            { code: '3.4.3', descriptionEn: 'Promoting Self-Learning and Collaborative Learning Skills', descriptionAr: 'تعزيز مهارات التعلم الذاتي والتعلم التعاوني' },
+            { code: '3.4.4', descriptionEn: 'Developing the Spirit of Initiative, Entrepreneurship, and Adaptability to Variables', descriptionAr: 'تنمية روح المبادرة، وتعزيز التكيف مع المتغيرات' },
+            { code: '3.4.5', descriptionEn: 'Developing Oral and Calculation Skills, and Promoting Reading Culture', descriptionAr: 'تنمية مهارات التعلم القرائية والحسابية، وتعزيز ثقافة القراءة' },
+            { code: '3.4.6', descriptionEn: 'Developing Digital Skills', descriptionAr: 'تنمية المهارات الرقمية' },
+          ],
+        },
+        {
+          code: '3.5',
+          nameEn: 'Assessment and Support for Progress',
+          nameAr: 'التقويم ومساندة التقدم',
+          indicators: [
+            { code: '3.5.1', descriptionEn: 'Employing Assessment Methods that account for differentiation and achieve learning goals', descriptionAr: 'توظيف أساليب تقويم تراعي التمايز وتضمن تحقق أهداف التعلم' },
+            { code: '3.5.2', descriptionEn: 'Applying Assessments according to Approved Standards', descriptionAr: 'تطبيق التقويمات حسب المعايير المعتمدة' },
+            { code: '3.5.3', descriptionEn: 'Employing Assessment Results in Support of Learning and Progress', descriptionAr: 'توظيف نتائج التقويم في دعم التعلم والتقدم فيه' },
+            { code: '3.5.4', descriptionEn: 'Follow-up in achieving learning goals and providing differentiation among students', descriptionAr: 'متابعة التقدم في تحقيق أهداف التعلم بما يراعي التمايز بين الطلبة' },
+          ],
+        },
+      ],
     },
-  });
-
-  // ---------- Domain 2.2 – School Climate and Learning Environment ----------
-  const domainClimate = await prisma.domain.upsert({
-    where: { id: "domain-2-2-school-climate-learning-env" },
-    update: {},
-    create: {
-      id: "domain-2-2-school-climate-learning-env",
-      code: "D2.2",
-      nameEn: "School Climate and Learning Environment",
-      nameAr: "مناخ المدرسة وبيئة التعلم",
-      descriptionEn:
-        "Covers school relationships, wellbeing, and the learning environment.",
-      descriptionAr:
-        "يتناول العلاقات المدرسية والرفاه وبيئة التعلم.",
+    {
       axisId: axis2.id,
+      code: 'D4',
+      nameEn: 'Learning Environment and Outcomes',
+      nameAr: 'مناخ المدرسة و بيئة التعلم',
+      standards: [
+        {
+          code: '4.1',
+          nameEn: 'Quality of the Learning Environment',
+          nameAr: 'جودة بيئة التعلم',
+          indicators: [
+            { code: '4.1.1', descriptionEn: 'Safety and Security Procedures, and licensing by relevant authorities', descriptionAr: 'تدابير الأمن والسلامة وترخيصها من الجهات المختصة' },
+            { code: '4.1.2', descriptionEn: 'Monitoring school facilities, environment, and internal and external areas, including those for students with disabilities', descriptionAr: 'متابعة مرافق المدرسة الجسدية والبيئة الداخلية والمناطق فيها، بمن فيهم ذوو الإعاقة' },
+            { code: '4.1.3', descriptionEn: 'Cleanliness of school facilities and surroundings', descriptionAr: 'نظافة مرافق المدرسة و جاذبيتها' },
+            { code: '4.1.4', descriptionEn: 'Employing digital assessment and supporting platforms that aid in in-person learning and learning remotely', descriptionAr: 'تجهيز المرافق التعليمية بالوسائط الأمنة المساعدة عالتعلم الحضزري و التعلم عن بعد' },
+          ],
+        },
+        {
+          code: '4.2',
+          nameEn: 'Enhancing Student Talent',
+          nameAr: ' تعزيز مواهب الطلبة و قدراتهم',
+          indicators: [
+            { code: '4.2.1', descriptionEn: 'A school environment that encourages students to discover their talents, skills, and potential', descriptionAr: 'بيئة مدرسية تشجع على اكتشاف قدرات الطلبة ومواهبهم' },
+            { code: '4.2.2', descriptionEn: 'Promoting student talents, skills, and nurturing them in line with their needs and abilities', descriptionAr: 'تعزيز مواهب الطلبة وقدراتهم، والاحتفاء بها وتطويرها بما يتماشى مع رغباتهم واحتياجاتهم ' },
+          ],
+        },
+        {
+          code: '4.3',
+          nameEn: 'Care and Support',
+          nameAr: 'الدعم والرعاية',
+          indicators: [
+            { code: '4.3.1', descriptionEn: 'Promoting child rights culture', descriptionAr: 'تنمية ثقافة حقوق الطفل' },
+            { code: '4.3.2', descriptionEn: "Attention to students' physical and mental health", descriptionAr: 'الاهتمام برعاية الطلبة جسدياً ونفسياً' },
+            { code: '4.3.3', descriptionEn: 'Providing care and support to students facing learning difficulties in their education or for other reasons', descriptionAr: 'دعم ورعاية الطلبة الذين يواجهون صعوبات في تعلمهم، لاحتياجاتهم الخاصة أو إعاقتهم أو لأسباب أخرى' },
+            { code: '4.3.4', descriptionEn: 'Building research skills and vocational guidance and supporting them in line with labor market trends and requirements', descriptionAr: 'تهيئة الطلبة للمسارات الأكاديمية و المهنية و دعمهم بما يتوافق مع ميولهم و متطلبات سوق العمل' },
+            { code: '4.3.5', descriptionEn: 'Guiding students towards their needs and requirements, and preparing them for transitioning to other educational stages', descriptionAr: 'تفهم مراحل نمو الطلبة و متطلباتها و تهيئة الطلبة للانتقال من مرحلة تعليمية الى اخرى' },
+          ],
+        },
+        {
+          code: '4.4',
+          nameEn: 'Development of Scientific Skills',
+          nameAr: 'تنمية مهارات البحث العلمي',
+          indicators: [
+            { code: '4.4.1', descriptionEn: 'A school environment that encourages scientific research, commitment to ethical standards, and estimation of its value', descriptionAr: 'بيئة مدرسية تشجع على البحث العلمي والالتزام بأخلاقياته' },
+            { code: '4.4.2', descriptionEn: 'Role of the school in highlighting scientific and technical outputs and achievements', descriptionAr: 'نهج المدرسة في إبراز الإنتاج البحثي للطلبة وتقديره' },
+          ],
+        },
+      ],
     },
-  });
 
-  // ---------- Standards for Domain 2.1 – Teaching and Assessment ----------
-  const standardsTeaching = [
+    // --- AXIS 3: Assurance of Learning and School Processes Quality ---
     {
-      id: "standard-3-0-self-eval-teaching-assessment",
-      code: "D2.1-SE",
-      nameEn: "Self-Evaluation for Teaching and Assessment",
-      nameAr: "التقويم الذاتي لمجال التدريس والتقويم",
-    },
-    {
-      id: "standard-3-1-planning-teaching",
-      code: "3.1",
-      nameEn: "Planning for Teaching",
-      nameAr: "التخطيط للتدريس",
-    },
-    {
-      id: "standard-3-2-managing-learning",
-      code: "3.2",
-      nameEn: "Management of the Learning Process",
-      nameAr: "إدارة عملية التعلم",
-    },
-    {
-      id: "standard-3-3-teaching-effectiveness",
-      code: "3.3",
-      nameEn: "Effectiveness of Teaching",
-      nameAr: "فاعلية التدريس",
-    },
-    {
-      id: "standard-3-4-learning-to-life",
-      code: "3.4",
-      nameEn: "Connecting Learning to Life",
-      nameAr: "ربط التعلم بالحياة",
-    },
-    {
-      id: "standard-3-5-assessment-support-progress",
-      code: "3.5",
-      nameEn: "Assessment and Support of Progress",
-      nameAr: "التقويم ومساندة التقدم",
-    },
-  ];
-
-  for (const s of standardsTeaching) {
-    await prisma.standard.upsert({
-      where: { id: s.id },
-      update: {},
-      create: {
-        id: s.id,
-        code: s.code,
-        nameEn: s.nameEn,
-        nameAr: s.nameAr,
-        domainId: domainTeaching.id,
-      },
-    });
-  }
-
-  // ---------- Standards for Domain 2.2 – School Climate and Learning Environment ----------
-  const standardsClimate = [
-    {
-      id: "standard-4-0-self-eval-school-climate",
-      code: "D2.2-SE",
-      nameEn:
-        "Self-Evaluation for School Climate and Learning Environment",
-      nameAr:
-        "التقويم الذاتي لمجال مناخ المدرسة وبيئة التعلم",
-    },
-    {
-      id: "standard-4-1-safe-stimulating-env",
-      code: "4.1",
-      nameEn: "Safe and Stimulating Learning Environment",
-      nameAr: "بيئة تعلم آمنة ومحفزة",
-    },
-    {
-      id: "standard-4-2-relationships-participation",
-      code: "4.2",
-      nameEn: "Relationships and School Participation",
-      nameAr: "العلاقات والمشاركة المدرسية",
-    },
-    {
-      id: "standard-4-3-wellbeing-care-support",
-      code: "4.3",
-      nameEn: "Wellbeing, Care and Support",
-      nameAr: "الرفاه والرعاية والدعم",
-    },
-    {
-      id: "standard-4-4-scientific-research-env",
-      code: "4.4",
-      nameEn: "Environment for Scientific Research",
-      nameAr: "بيئة البحث العلمي",
-    },
-  ];
-
-  for (const s of standardsClimate) {
-    await prisma.standard.upsert({
-      where: { id: s.id },
-      update: {},
-      create: {
-        id: s.id,
-        code: s.code,
-        nameEn: s.nameEn,
-        nameAr: s.nameAr,
-        domainId: domainClimate.id,
-      },
-    });
-  }
-
-  console.log("✅ Axis 2 seeded.");
-
-  // =========================================================
-  // AXIS 3 – Ensuring Quality of Learning Outcomes and Processes
-  // =========================================================
-  console.log(
-    "🌱 Seeding Axis 3: Ensuring the Quality of Learning Outcomes and School Processes..."
-  );
-
-  const axis3 = await prisma.axis.upsert({
-    where: { id: "axis-3-quality-assurance" },
-    update: {},
-    create: {
-      id: "axis-3-quality-assurance",
-      nameEn:
-        "Ensuring the Quality of Learning Outcomes and School Processes",
-      nameAr: "ضمان جودة نواتج التعلم وعمليات المدرسة",
-      descriptionEn:
-        "Focuses on leadership, management and governance to ensure the quality of learning outcomes and school processes.",
-      descriptionAr:
-        "يركز على القيادة والإدارة والحوكمة لضمان جودة نواتج التعلم وعمليات المدرسة.",
-    },
-  });
-
-  // ---------- Domain 3.1 – Leadership, Management and Governance ----------
-  const domainLeadership = await prisma.domain.upsert({
-    where: { id: "domain-3-1-leadership-management-governance" },
-    update: {},
-    create: {
-      id: "domain-3-1-leadership-management-governance",
-      code: "D3.1",
-      nameEn: "Leadership, Management and Governance",
-      nameAr: "القيادة والإدارة والحوكمة",
-      descriptionEn:
-        "Covers strategic leadership, management efficiency and good governance.",
-      descriptionAr:
-        "يتناول القيادة الاستراتيجية والكفاءة الإدارية وتطبيق الحوكمة الجيدة.",
       axisId: axis3.id,
-    },
-  });
-
-  const standardsLeadership = [
-    {
-      id: "standard-5-0-self-eval-leadership-governance",
-      code: "D3.1-SE",
-      nameEn:
-        "Self-Evaluation for Leadership, Management and Governance",
-      nameAr:
-        "التقويم الذاتي لمجال القيادة والإدارة والحوكمة",
-    },
-    {
-      id: "standard-5-1-leading-change",
-      code: "5.1",
-      nameEn: "Leading Change",
-      nameAr: "قيادة التغيير",
-    },
-    {
-      id: "standard-5-2-leading-teaching-learning",
-      code: "5.2",
-      nameEn: "Leading Teaching and Learning",
-      nameAr: "قيادة التعليم والتعلم",
-    },
-    {
-      id: "standard-5-3-administrative-efficiency",
-      code: "5.3",
-      nameEn: "Administrative Efficiency",
-      nameAr: "الكفاءة الإدارية",
-    },
-    {
-      id: "standard-5-4-partnership-parents-community",
-      code: "5.4",
-      nameEn: "Partnership with Parents and the Community",
-      nameAr: "الشراكة مع أولياء الأمور والمجتمع",
-    },
-    {
-      id: "standard-5-5-governance",
-      code: "5.5",
-      nameEn: "Governance",
-      nameAr: "الحوكمة",
+      code: 'D5',
+      nameEn: 'Leadership, Administration, and Governance',
+      nameAr: 'القيادة والإدارة والحوكمة',
+      standards: [
+        {
+          code: '5.1',
+          nameEn: 'Leadership for Change',
+          nameAr: 'قيادة التغيير',
+          indicators: [
+            { code: '5.1.1', descriptionEn: 'Vision and Mission of the school, involvement of the community in their development and implementation', descriptionAr: 'رؤية ورسالة يشارك المجتمع المدرسي في بنائها وتنفيذهما' },
+            { code: '5.1.2', descriptionEn: 'Self-evaluation and its use in strategic planning and improving performance', descriptionAr: 'التقويم الذاتي وتوظيفه في التخطيط الاستراتيجي وتحسين الأداء' },
+            { code: '5.1.3', descriptionEn: 'Joint and active work and communication with the school community to support improvement processes', descriptionAr: 'العمل المشترك والتواصل الفاعل مع المجتمع المدرسي لدعم عمليات التحسين' },
+            { code: '5.1.4', descriptionEn: 'Expectations towards the curriculum, students, and staff', descriptionAr: 'توقعات عالية تجاه العاملين بالمدرسة والطلبة' },
+          ],
+        },
+        {
+          code: '5.2',
+          nameEn: 'Leadership for Learning and Instruction',
+          nameAr: 'قيادة التعليم والتعلم',
+          indicators: [
+            { code: '5.2.1', descriptionEn: 'School leadership guided by the curriculum, and instructional practices necessary to achieve learning goals', descriptionAr: 'إلمام قيادة المدرسة بالمناهج وممارسات التدريس الضرورية لتحقيق أهداف التعلم' },
+            { code: '5.2.2', descriptionEn: 'Supervision of the education and learning process that supports student differentiation and progress', descriptionAr: 'الإشراف على عمليتي التعليم والتعلم بما يدعم تعلم الطلبة ويراعي التمايز بينهم' },
+            { code: '5.2.3', descriptionEn: 'Professional growth directed at improving instruction, and raising student performance levels', descriptionAr: 'إنماء مهني للمعلمين موجه لتجويد التدريس، ورفع مستوى أداء الطلبة' },
+            { code: '5.2.4', descriptionEn: 'Student involvement in improving the learning process', descriptionAr: 'إشراك الطلبة في تحسين عمليات التعليم' },
+            { code: '5.2.5', descriptionEn: 'Formation of professional learning communities within the school and with other schools', descriptionAr: 'تكوين مجتمعات تعلم مهنية داخل المدرسة، ومع المدارس الأخرى' },
+          ],
+        },
+        {
+          code: '5.3',
+          nameEn: 'Administrative Efficiency',
+          nameAr: 'الكفاءة الإدارية',
+          indicators: [
+            { code: '5.3.1', descriptionEn: 'Management of financial resources to serve the learning of all students', descriptionAr: 'إدارة الموارد المالية بما يخدم تعلم جميع الطلبة' },
+            { code: '5.3.2', descriptionEn: 'Optimal use of school facilities and educational resources', descriptionAr: 'الاستخدام الفاعل للمرافق المدرسية والوسائل التعليمية' },
+            { code: '5.3.3', descriptionEn: 'Organization of roles and responsibilities', descriptionAr: 'تنظيم الأدوار والمسؤوليات' },
+            { code: '5.3.4', descriptionEn: 'Management of human resources and raising their professional efficiency', descriptionAr: 'إدارة الموارد البشرية، ورفع كفاءتها المهنية' },
+          ],
+        },
+        {
+          code: '5.4',
+          nameEn: 'Partnership with Parents and the Community',
+          nameAr: 'الشراكة مع أولياء الأمور والمجتمع',
+          indicators: [
+            { code: '5.4.1', descriptionEn: 'Involving parents in school life', descriptionAr: 'إشراك أولياء الأمور في الحياة المدرسية' },
+            { code: '5.4.2', descriptionEn: "Enabling parents to support their children's learning", descriptionAr: 'تمكين أولياء الأمور من دعم تعلم أبنائهم' },
+            { code: '5.4.3', descriptionEn: 'Partnership with community institutions to contribute to the advancement of school life and support learning outcomes', descriptionAr: 'الشراكة مع مؤسسات المجتمع بما يسهم في الارتقاء بالحياة المدرسية ودعم نواتج التعلم' },
+          ],
+        },
+        {
+          code: '5.5',
+          nameEn: 'Governance',
+          nameAr: 'الحوكمة',
+          indicators: [
+            { code: '5.5.1', descriptionEn: 'Accountability according to roles and responsibilities', descriptionAr: 'المساءلة وفق الأدوار والمسؤوليات' },
+            { code: '5.5.2', descriptionEn: 'Application of policies, systems, and organized regulations for work in the school', descriptionAr: 'تطبيق السياسات والأنظمة واللوائح المنظمة للعمل في المدرسة' },
+            { code: '5.5.3', descriptionEn: 'Transparency in providing data and ensuring participation', descriptionAr: 'الشفافية في توفير البيانات ومشاركتها' },
+          ],
+        },
+      ],
     },
   ];
 
-  for (const s of standardsLeadership) {
-    await prisma.standard.upsert({
-      where: { id: s.id },
-      update: {},
-      create: {
-        id: s.id,
-        code: s.code,
-        nameEn: s.nameEn,
-        nameAr: s.nameAr,
-        domainId: domainLeadership.id,
+  // --- 4. Process the data and create records ---
+  for (const domain of domainData) {
+    const createdDomain = await prisma.domain.create({
+      data: {
+        code: domain.code,
+        nameEn: domain.nameEn,
+        nameAr: domain.nameAr,
+        axisId: domain.axisId,
+        standards: {
+          create: domain.standards.map((standard) => ({
+            code: standard.code,
+            nameEn: standard.nameEn,
+            nameAr: standard.nameAr,
+            indicators: {
+              create: standard.indicators.map((indicator) => ({
+                code: indicator.code,
+                descriptionEn: indicator.descriptionEn,
+                descriptionAr: indicator.descriptionAr,
+              })),
+            },
+          })),
+        },
+      },
+      include: {
+        standards: {
+          include: {
+            indicators: true,
+          },
+        },
+        axis: true,
       },
     });
+    console.log(`✅ Created Domain: ${createdDomain.nameEn} (${createdDomain.code}) under Axis: ${createdDomain.axis.nameEn}`);
   }
 
-  console.log("✅ Axis 3 seeded.");
-
-  console.log("🎉 All axes, domains, and standards seeded successfully.");
+  console.log('🎉 Database seeding finished successfully.');
 }
 
 main()

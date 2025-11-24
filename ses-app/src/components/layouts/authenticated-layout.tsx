@@ -94,7 +94,7 @@ export function AuthenticatedLayout({ children, locale, userName, userRole }: Au
           {/* Sidebar Header */}
           <div className="flex h-16 items-center justify-between px-6 border-b">
             <div className="flex items-center gap-3">
-              <div className="relative h-8 w-8 overflow-hidden rounded-full">
+              <div className="relative h-10 w-1- overflow-hidden rounded-full">
                 <NextImage
                   src="/logo.png"
                   alt="School Logo"
