@@ -45,24 +45,49 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
   const { t } = await getServerTranslation(locale, "common");
 
-  // Fetch evidence statistics
-  const [totalEvidence, approvedCount, rejectedCount, underReviewCount] =
-    await Promise.all([
+  // Parallelize independent queries to reduce network round trips
+  const [
+    [totalEvidence, approvedCount, rejectedCount, underReviewCount],
+    evidenceByDomain,
+    recentEvidence
+  ] = await Promise.all([
+    // 1. Fetch counts
+    Promise.all([
       prisma.evidence.count(),
       prisma.evidence.count({ where: { status: "APPROVED" } }),
       prisma.evidence.count({ where: { status: "REJECTED" } }),
       prisma.evidence.count({ where: { status: "UNDER_REVIEW" } }),
-    ]);
+    ]),
+    // 2. Fetch evidence grouped by domain
+    prisma.evidence.groupBy({
+      by: ["domainId"],
+      _count: { id: true },
+    }),
+    // 3. Fetch recent evidence
+    prisma.evidence.findMany({
+      take: 5,
+      orderBy: { submittedAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        submittedAt: true,
+        domain: {
+          select: {
+            nameEn: true,
+            nameAr: true
+          }
+        },
+        standard: {
+          select: {
+            code: true
+          }
+        }
+      },
+    })
+  ]);
 
-  // Fetch evidence by domain
-  const evidenceByDomain = await prisma.evidence.groupBy({
-    by: ["domainId"],
-    _count: {
-      id: true,
-    },
-  });
-
-  // Get domain names for the chart
+  // Fetch domain details (dependent on evidenceByDomain)
   const domainIds = evidenceByDomain.map((e: { domainId: string }) => e.domainId);
   const domains = await prisma.domain.findMany({
     where: { id: { in: domainIds } },
@@ -70,28 +95,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
       id: true,
       nameEn: true,
       nameAr: true,
-    },
-  });
-
-  const recentEvidence = await prisma.evidence.findMany({
-    take: 5,
-    orderBy: { submittedAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      status: true,
-      submittedAt: true,
-      domain: {
-        select: {
-          nameEn: true,
-          nameAr: true
-        }
-      },
-      standard: {
-        select: {
-          code: true
-        }
-      }
     },
   });
 

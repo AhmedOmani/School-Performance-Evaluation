@@ -65,7 +65,7 @@ export function DomainBarChart({ data, locale }: DomainBarChartProps) {
                         fontSize={14}
                         tickLine={false}
                         axisLine={false}
-
+                        allowDecimals={false}
                         tickFormatter={(value) => `${value}`}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />

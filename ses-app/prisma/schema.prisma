@@ -105,6 +105,7 @@ model Evidence {
 
   @@index([status])
   @@index([domainId, standardId, indicatorId])
+  @@index([submittedAt])
 }
 
 model User {
