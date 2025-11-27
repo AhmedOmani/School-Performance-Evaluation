@@ -10,37 +10,31 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // 1. Get total evidence count
-        const totalEvidence = await prisma.evidence.count();
-
-        // 2. Get approved evidence count
-        const approvedEvidence = await prisma.evidence.count({
-            where: { status: "APPROVED" },
-        });
-
-        // 3. Get under review evidence count
-        const underReviewEvidence = await prisma.evidence.count({
-            where: { status: "UNDER_REVIEW" },
-        });
-
-        // 4. Get evidence count by domain
-        // We need to group by domainId and then join with Domain table to get names
-        // Prisma's groupBy is good for this.
-        const evidenceByDomainRaw = await prisma.evidence.groupBy({
-            by: ["domainId"],
-            _count: {
-                id: true,
-            },
-        });
-
-        // Fetch domain details to map names
-        const domains = await prisma.domain.findMany({
-            select: {
-                id: true,
-                nameEn: true,
-                nameAr: true,
-            },
-        });
+        // Parallelize all independent queries
+        const [
+            totalEvidence,
+            approvedEvidence,
+            underReviewEvidence,
+            evidenceByDomainRaw,
+            domains
+        ] = await Promise.all([
+            prisma.evidence.count(),
+            prisma.evidence.count({ where: { status: "APPROVED" } }),
+            prisma.evidence.count({ where: { status: "UNDER_REVIEW" } }),
+            prisma.evidence.groupBy({
+                by: ["domainId"],
+                _count: {
+                    id: true,
+                },
+            }),
+            prisma.domain.findMany({
+                select: {
+                    id: true,
+                    nameEn: true,
+                    nameAr: true,
+                },
+            })
+        ]);
 
         // Map counts to domain names
         const evidenceByDomain = domains.map((domain) => {
