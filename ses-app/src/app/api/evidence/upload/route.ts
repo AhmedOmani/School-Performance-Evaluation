@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/session";
-import { uploadFileToS3, isS3Configured } from "@/lib/upload";
+import { z } from "zod";
+
+const uploadSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters"),
+    description: z.string().optional().nullable(),
+    domainId: z.string().min(1, "Domain is required"),
+    standardId: z.string().min(1, "Standard is required"),
+    indicatorId: z.string().optional().nullable(),
+    type: z.enum(["FILE", "LINK"]),
+    filePath: z.string().optional().nullable(),
+    url: z.string().url("Invalid URL format").optional().nullable(),
+}).refine((data) => {
+    if (data.type === "FILE" && !data.filePath) return false;
+    if (data.type === "LINK" && !data.url) return false;
+    return true;
+}, {
+    message: "File path is required for FILE type, URL is required for LINK type",
+    path: ["type"], // Error will be attached to the 'type' field
+});
 
 export async function POST(request: NextRequest) {
     try {
         const user = await requireAuth();
-        // const user = { id: "cmi7x0qxg0000f11x5h34znt7" }; // Mock user for testing
 
         let formData;
         try {
@@ -14,47 +31,43 @@ export async function POST(request: NextRequest) {
         } catch (error) {
             console.error("Error parsing form data:", error);
             return NextResponse.json(
-                { error: "Failed to parse form data. The file might be too large or corrupted." },
+                { error: "Failed to parse form data." },
                 { status: 400 }
             );
         }
-        const title = formData.get("title") as string;
-        const description = formData.get("description") as string | null;
-        const domainId = formData.get("domainId") as string;
-        const standardId = formData.get("standardId") as string;
-        const indicatorId = formData.get("indicatorId") as string | null;
-        const type = formData.get("type") as "FILE" | "LINK";
-        const filePath = formData.get("filePath") as string | null;
-        const url = formData.get("url") as string | null;
 
-        //validation
-        if (!title || !domainId || !standardId || !type) {
-            return NextResponse.json({
-                error: "Missing required fields"
-            }, { status: 400 });
-        }
+        const rawData = {
+            title: formData.get("title"),
+            description: formData.get("description"),
+            domainId: formData.get("domainId"),
+            standardId: formData.get("standardId"),
+            indicatorId: formData.get("indicatorId"),
+            type: formData.get("type"),
+            filePath: formData.get("filePath"),
+            url: formData.get("url"),
+        };
 
-        if (type === "FILE" && !filePath) {
-            return NextResponse.json({ error: "File path is required when type is FILE" }, { status: 400 });
-        }
+        const validationResult = uploadSchema.safeParse(rawData);
 
-        if (type === "LINK" && !url) {
+        if (!validationResult.success) {
             return NextResponse.json(
-                { error: "URL is required when type is LINK" },
+                { error: "Validation failed", details: validationResult.error.flatten() },
                 { status: 400 }
             );
         }
+
+        const { data } = validationResult;
 
         const evidence = await prisma.evidence.create({
             data: {
-                title,
-                description: description || null,
-                domainId,
-                standardId,
-                indicatorId: indicatorId || null,
-                type,
-                filePath: type === "FILE" ? filePath : null,
-                url: type === "LINK" ? url : null,
+                title: data.title,
+                description: data.description || null,
+                domainId: data.domainId,
+                standardId: data.standardId,
+                indicatorId: data.indicatorId || null,
+                type: data.type,
+                filePath: data.type === "FILE" ? data.filePath : null,
+                url: data.type === "LINK" ? data.url : null,
                 status: "UNDER_REVIEW",
                 submittedById: user.id,
             },
