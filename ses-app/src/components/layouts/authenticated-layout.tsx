@@ -7,7 +7,8 @@ import {
   Upload, 
   FolderOpen, 
   FileText, 
-  Users 
+  Users,
+  CheckCircle2
 } from "lucide-react";
 import { LanguageSwitch } from "@/components/language-switch";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -91,7 +92,7 @@ export function AuthenticatedLayout({children,locale,userName, userRole}: Authen
                       : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <span>✓</span>
+                  <CheckCircle2 className="h-5 w-5" />
                   <span>{locale === "ar" ? "مراجعة" : "Review"}</span>
                 </Link>
             )}

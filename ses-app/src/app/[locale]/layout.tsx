@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Providers }  from "@/components/providers/session-provider";
 import {ThemeProvider} from "@/components/providers/theme-provider";
 import { TranslationProvider}  from "@/components/providers/translation-provider";
+import { ToastProvider } from "@/components/ui/toaster";
 import { defaultLocale , type Locale } from "@/lib/i18n/config";
 import { getServerTranslation } from "@/lib/i18n/server";
 import { resolveLocale } from "@/lib/i18n/utils"
@@ -35,7 +36,11 @@ export default async function LocaleLayout({children , params}: LocaleLayoutProp
             <body>
                 <Providers>
                     <TranslationProvider locale={locale} resources={resources}>
-                        <ThemeProvider>{children}</ThemeProvider>
+                        <ThemeProvider>
+                            <ToastProvider>
+                                {children}
+                            </ToastProvider>
+                        </ThemeProvider>
                     </TranslationProvider>
                 </Providers>
             </body>

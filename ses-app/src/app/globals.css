@@ -2,22 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-:ROOT {
-    --background: #f5f7fa;
-    --foreground: #0f172a;
-}
-
-@media(prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 0 0% 98%;
   }
 }
 
 body {
-  margin: 20px;
-  background: var(--background);
-  min-height: 100vh;
-  color: var(--foreground);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: var(--font-geist-sans, system-ui), sans-serif;
+  min-height: 100vh;
+}
+
+/* Smooth transitions */
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

@@ -1,13 +1,14 @@
 import { notFound, redirect } from "next/navigation";
-import { LanguageSwitch } from "@/components/language-switch";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { X, Check, Clock, FileText } from "lucide-react";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { getServerTranslation } from "@/lib/i18n/server";
 import { resolveLocale } from "@/lib/i18n/utils";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/session";
-import { LogoutButton } from "@/components/logout-button";
 import { AuthenticatedLayout } from "@/components/layouts/authenticated-layout";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { DomainStatsCard } from "@/components/dashboard/domain-stats-card";
+import { RecentEvidenceCard } from "@/components/dashboard/recent-evidence-card";
 
 type DashboardPageProps = {
   params: Promise<{ locale?: string }>;
@@ -81,13 +82,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
   return (
     <AuthenticatedLayout locale={locale} userName={user.name} userRole={user.role}>
-      <div className="space-y-6">
+      <div className="space-y-8 py-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t("navigation.dashboard")}
           </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          <p className="text-lg text-slate-600 dark:text-slate-300">
             {locale === "ar"
               ? "نظرة عامة على الأدلة والإحصائيات"
               : "Overview of Evidence and Statistics"}
@@ -95,95 +96,52 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-red-200 bg-white p-6 shadow-sm dark:border-red-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "مرفوض" : "Rejected"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-red-600 dark:text-red-400">
-                  {rejectedCount}
-                </p>
-              </div>
-              <div className="rounded-full bg-red-100 p-3 dark:bg-red-900/20">
-                <span className="text-2xl">✕</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-green-200 bg-white p-6 shadow-sm dark:border-green-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "معتمد" : "Approved"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-green-600 dark:text-green-400">
-                  {approvedCount}
-                </p>
-              </div>
-              <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/20">
-                <span className="text-2xl">✓</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-yellow-200 bg-white p-6 shadow-sm dark:border-yellow-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "قيد المراجعة" : "Under Review"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                  {underReviewCount}
-                </p>
-              </div>
-              <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900/20">
-                <span className="text-2xl">⏳</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-blue-200 bg-white p-6 shadow-sm dark:border-blue-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {locale === "ar" ? "إجمالي الأدلة" : "Total Evidence"}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {totalEvidence}
-                </p>
-              </div>
-              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/20">
-                <span className="text-2xl">📄</span>
-              </div>
-            </div>
-          </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title={locale === "ar" ? "مرفوض" : "Rejected"}
+            value={rejectedCount}
+            icon={<X className="h-5 w-5" />}
+            iconBgColor="bg-red-100 dark:bg-red-900/20"
+            iconColor="text-red-600 dark:text-red-400"
+            borderColor="border-red-200 dark:border-red-800"
+            textColor="text-red-600 dark:text-red-400"
+          />
+          <StatsCard
+            title={locale === "ar" ? "معتمد" : "Approved"}
+            value={approvedCount}
+            icon={<Check className="h-5 w-5" />}
+            iconBgColor="bg-green-100 dark:bg-green-900/20"
+            iconColor="text-green-600 dark:text-green-400"
+            borderColor="border-green-200 dark:border-green-800"
+            textColor="text-green-600 dark:text-green-400"
+          />
+          <StatsCard
+            title={locale === "ar" ? "قيد المراجعة" : "Under Review"}
+            value={underReviewCount}
+            icon={<Clock className="h-5 w-5" />}
+            iconBgColor="bg-yellow-100 dark:bg-yellow-900/20"
+            iconColor="text-yellow-600 dark:text-yellow-400"
+            borderColor="border-yellow-200 dark:border-yellow-800"
+            textColor="text-yellow-600 dark:text-yellow-400"
+          />
+          <StatsCard
+            title={locale === "ar" ? "إجمالي الأدلة" : "Total Evidence"}
+            value={totalEvidence}
+            icon={<FileText className="h-5 w-5" />}
+            iconBgColor="bg-blue-100 dark:bg-blue-900/20"
+            iconColor="text-blue-600 dark:text-blue-400"
+            borderColor="border-blue-200 dark:border-blue-800"
+            textColor="text-blue-600 dark:text-blue-400"
+          />
         </div>
 
         {/* Charts Section */}
         <div className="grid gap-6 lg:grid-cols-2">
+          <DomainStatsCard locale={locale} stats={domainStats} />
+          
+          {/* Status Chart Placeholder */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-            <h3 className="text-lg font-semibold">
-              {locale === "ar" ? "حسب المجال" : "By Domain"}
-            </h3>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              {locale === "ar"
-                ? "توزيع الأدلة حسب المجالات"
-                : "Evidence distribution by domains"}
-            </p>
-            <div className="mt-4 space-y-2">
-              {domainStats.map((stat, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <span className="text-sm">{stat.name}</span>
-                  <span className="font-semibold">{stat.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               {locale === "ar" ? "حسب الحالة" : "By Status"}
             </h3>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
@@ -191,35 +149,43 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 ? "نسبة الأدلة حسب الحالة"
                 : "Evidence proportion by status"}
             </p>
-            {/* Donut chart will go here */}
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                  {locale === "ar" ? "معتمد" : "Approved"}
+                </span>
+                <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                  {approvedCount}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                  {locale === "ar" ? "قيد المراجعة" : "Under Review"}
+                </span>
+                <span className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
+                  {underReviewCount}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                  {locale === "ar" ? "مرفوض" : "Rejected"}
+                </span>
+                <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                  {rejectedCount}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Recent Evidence */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-          <h3 className="text-lg font-semibold">
-            {locale === "ar" ? "آخر الأدلة المرفوعة" : "Latest Uploaded Evidence"}
-          </h3>
-          <div className="mt-4 space-y-2">
-            {recentEvidence.length > 0 ? (
-              recentEvidence.map((evidence) => (
-                <div
-                  key={evidence.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 p-3 dark:border-gray-700"
-                >
-                  <span className="text-sm font-medium">{evidence.title}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {evidence.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {locale === "ar" ? "لا توجد أدلة بعد" : "No evidence yet"}
-              </p>
-            )}
-          </div>
-        </div>
+        <RecentEvidenceCard
+          locale={locale}
+          evidence={recentEvidence.map((e) => ({
+            ...e,
+            submittedAt: e.submittedAt.toISOString(),
+          }))}
+        />
       </div>
     </AuthenticatedLayout>
   );
