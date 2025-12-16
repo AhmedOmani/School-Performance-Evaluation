@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/session";
 import { z } from "zod";
-import { ratelimit } from "@/lib/ratelimit";
 
 const uploadSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
@@ -26,17 +25,6 @@ export async function POST(request: NextRequest) {
     try {
         const user = await requireAuth();
 
-        // Rate Limiting
-        const identifier = user.id;
-        const { success } = await ratelimit.limit(identifier);
-
-        if (!success) {
-            return NextResponse.json(
-                { error: "Too many requests. Please try again later." },
-                { status: 429 }
-            );
-        }
-
         let formData;
         try {
             formData = await request.formData();
@@ -59,9 +47,12 @@ export async function POST(request: NextRequest) {
             url: formData.get("url"),
         };
 
+        console.log("Raw form data received:", rawData);
+
         const validationResult = uploadSchema.safeParse(rawData);
 
         if (!validationResult.success) {
+            console.error("Validation failed:", validationResult.error.flatten());
             return NextResponse.json(
                 { error: "Validation failed", details: validationResult.error.flatten() },
                 { status: 400 }

@@ -137,6 +137,14 @@ export function UploadEvidenceForm({
       const data = await response.json();
 
       if (!response.ok) {
+        // Check if we have detailed validation errors
+        if (data.details && data.details.fieldErrors) {
+          const fieldErrors = data.details.fieldErrors;
+          const errorMessages = Object.entries(fieldErrors)
+            .map(([field, errors]) => `${field}: ${(errors as string[]).join(", ")}`)
+            .join("\n");
+          throw new Error(errorMessages || data.error || "Validation failed");
+        }
         throw new Error(data.error || "Failed to save evidence metadata");
       }
 
