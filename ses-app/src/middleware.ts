@@ -12,10 +12,5 @@ export const config = {
         "/evidence/:path*",
         "/reports/:path*",
         "/upload/:path*",
-        "/api/evidence/:path*",
-        "/api/reports/:path*",
-        "/api/domains/:path*",
-        "/api/standards/:path*",
-        "/api/indicators/:path*",
     ],
 };
